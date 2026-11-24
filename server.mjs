@@ -25,6 +25,7 @@ const staticFiles = new Map([
 ]);
 export async function start(options = {}) {
   const panelOnly = options.panelOnly ?? process.env.SEYIR_PANEL_ONLY === "1";
+  const workshopUrl = validateRoot(options.workshopUrl ?? process.env.DOCKERFLARE_WORKSHOP_URL) || null;
   const publicGatewayUrl =
     validateRoot(
       options.publicGatewayUrl ??
@@ -104,7 +105,7 @@ export async function start(options = {}) {
           store.put("settings", updated);
           store.record({
             source: "seyir",
-            service: "Halkness",
+            service: "OS Dashboard",
             kind: "config",
             message: "Model gateway ayarları güncellendi.",
           });
@@ -154,6 +155,7 @@ export async function start(options = {}) {
           },
           settings: cfg,
           publicGatewayUrl,
+          workshopUrl,
           guardKeyReady: panelOnly
             ? null
             : Boolean(
@@ -205,7 +207,7 @@ export async function start(options = {}) {
   store.prune();
   store.record({
     source: "seyir",
-    service: "Halkness",
+    service: "OS Dashboard",
     level: "info",
     kind: "startup",
     message: "Gözlem servisi başlatıldı.",
@@ -238,7 +240,7 @@ if (
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   const app = await start();
-  console.log("Halkness " + app.url);
+  console.log("OS Dashboard " + app.url);
   for (const signal of ["SIGINT", "SIGTERM"])
     process.once(signal, () => app.close().then(() => process.exit(0)));
 }

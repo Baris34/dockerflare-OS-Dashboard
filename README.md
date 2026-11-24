@@ -1,8 +1,10 @@
-# Halkness
+# OS Dashboard
 
-Halkness, bir sunucunun kaynak kullanımını, uygulama günlüklerini ve OpenAI uyumlu model trafiğini tek ekranda toplar. Docker kurulumunda panel ile toplayıcı bir konteynerde, AI Gateway ikinci bir konteynerde çalışır. İki servis aynı yerel SQLite veritabanını kullanır. [Docker panelini aç](http://127.0.0.1:4321/#gateway) · [Ayrı imajları derle ve çalıştır](#paneli-ve-ai-gatewayi-ayrı-konteynerlerde-çalıştır)
+OS Dashboard, bir sunucunun kaynak kullanımını, uygulama günlüklerini ve OpenAI uyumlu model trafiğini tek ekranda toplar. Docker kurulumunda panel ile toplayıcı bir konteynerde, AI Gateway ikinci bir konteynerde çalışır. İki servis aynı yerel SQLite veritabanını kullanır. [Docker panelini aç](http://127.0.0.1:4321/#gateway) · [Ayrı imajları derle ve çalıştır](#paneli-ve-ai-gatewayi-ayrı-konteynerlerde-çalıştır)
 
 Mevcut kurulumlarla uyum için Docker veri birimleri, `SEYIR_*` ortam değişkenleri ve `X-Seyir-*` HTTP başlıkları önceki teknik adlarını kullanır.
+
+Dockerflare OS ile kurulduğunda Workshop’ın **Admin → OS Dashboard** bağlantısı sohbet denetimini açar. Panelden **Dockerflare OS’u aç** ile Workshop’a dönebilirsin. Yerel kurulumda [OS Dashboard](http://127.0.0.1:4321/#workshop) ve [Dockerflare OS](http://127.0.0.1:18080/) ayrı adreslerden çalışır. [Birlikte kurulum](SUNUCU-KURULUMU.md)
 
 ## Windows veya Linux üzerinde tek süreçte başlat
 
@@ -12,7 +14,7 @@ Node.js 24 veya daha yeni bir sürümle proje klasöründe çalıştır.
 node server.mjs
 ```
 
-[Paneli aç](http://127.0.0.1:4320/). Ek paket kurulumu gerekmez. Bu bilgisayarda uygulama doğrudan Windows üzerinde çalıştığında Windows olay kanallarını okuyabilir. Başka bir sunucuyu izlemek için Halkness'i o makinede başlat. Uzaktaki paneli kendi bilgisayarından açmak için SSH yerel port yönlendirmesi kullanabilirsin.
+[Paneli aç](http://127.0.0.1:4320/). Ek paket kurulumu gerekmez. Bu bilgisayarda uygulama doğrudan Windows üzerinde çalıştığında Windows olay kanallarını okuyabilir. Başka bir sunucuyu izlemek için OS Dashboard'u o makinede başlat. Uzaktaki paneli kendi bilgisayarından açmak için SSH yerel port yönlendirmesi kullanabilirsin.
 
 ```sh
 ssh -N -L 4321:127.0.0.1:4320 kullanici@sunucu
@@ -46,35 +48,35 @@ Dosya kullanan bir servis için `data/logs` altına `.log`, `.jsonl` veya `.ndjs
 
 [AI Gateway](http://127.0.0.1:4320/#gateway) model çağrılarının giriş ve çıkışındaki denetimleri gösterir. Bir kararı açarak aynı istek kimliğine bağlı denetimleri ve çağrının sonucunu inceleyebilirsin. Bir DLP eşleşmesi hassas veri biçimini, bir guard kararı modelin verdiği güvenlik sınıfını gösterir. İşaretlenen bir çağrı devam eder. Engellenen bir girdi ana modele iletilmez. Bir çıktı engellendiyse ana model zaten yanıt üretmiştir.
 
-**Örnek çalıştırma.** Proje kökünde `node examples/cloudflare-os/ai-gateway/run.mjs --import` dört gerçek Workshop sohbeti başlatır. Varsayılan hedef tek süreçli panelin veritabanıdır. Docker panelinde görmek için PowerShell'de önce `$env:SEYIR_IMPORT_VOLUME='seyir-data'` ayarla. DLP gerçek Halkness kurallarıyla çalışır. Guard ve ana model, Docker ağına özel iki test servisidir. [İmajlar, doğrulamalar ve tekrar çalıştırma](examples/cloudflare-os/ai-gateway/README.md)
+**Örnek çalıştırma.** Proje kökünde `node examples/cloudflare-os/ai-gateway/run.mjs --import` dört gerçek Workshop sohbeti başlatır. Varsayılan hedef tek süreçli panelin veritabanıdır. Docker panelinde görmek için PowerShell'de önce `$env:SEYIR_IMPORT_VOLUME='seyir-data'` ayarla. DLP gerçek OS Dashboard kurallarıyla çalışır. Guard ve ana model, Docker ağına özel iki test servisidir. [İmajlar, doğrulamalar ve tekrar çalıştırma](examples/cloudflare-os/ai-gateway/README.md)
 
-**Qwen3Guard'ı bağlamak için** AI Gateway'deki koruma ayarlarına OpenAI uyumlu API kökünü ve sunucunda yayınlanan model kimliğini gir. Örneğin özel ağda sunucu ismi `guard` ise kök `http://guard:8000/v1`, kimlik `Qwen/Qwen3Guard-Gen-4B` olabilir. Bunlar örnek değerlerdir. Halkness model adını indirmez. Sağlayıcının Qwen3Guard-Gen sohbet şablonuyla girdi ve asistan yanıtı sınıflandırabilmesi gerekir. İşletmeciye ait ayrı bir guard anahtarı gerekiyorsa Halkness sürecine `SEYIR_GUARD_KEY` ve tam origin olarak `SEYIR_GUARD_KEY_ORIGIN` ver. Anahtarlar panel ayarlarına yazılmaz. [Qwen'in model kartı ve sunucu sözleşmesi](https://huggingface.co/Qwen/Qwen3Guard-Gen-4B)
+**Qwen3Guard'ı bağlamak için** AI Gateway'deki koruma ayarlarına OpenAI uyumlu API kökünü ve sunucunda yayınlanan model kimliğini gir. Örneğin özel ağda sunucu ismi `guard` ise kök `http://guard:8000/v1`, kimlik `Qwen/Qwen3Guard-Gen-4B` olabilir. Bunlar örnek değerlerdir. OS Dashboard model adını indirmez. Sağlayıcının Qwen3Guard-Gen sohbet şablonuyla girdi ve asistan yanıtı sınıflandırabilmesi gerekir. İşletmeciye ait ayrı bir guard anahtarı gerekiyorsa OS Dashboard sürecine `SEYIR_GUARD_KEY` ve tam origin olarak `SEYIR_GUARD_KEY_ORIGIN` ver. Anahtarlar panel ayarlarına yazılmaz. [Qwen'in model kartı ve sunucu sözleşmesi](https://huggingface.co/Qwen/Qwen3Guard-Gen-4B)
 
 Gerçek guard bağlantısı boşken Qwen denetimi kapalıdır. DLP bağımsız çalışır. Qwen açıksa `Unsafe` için engelleme veya işaretleme seçilebilir. `Controversial` işaretlenir. Denetim tamamlanamazsa geçit çağrıyı durdurur. Çıkış koruması açıkken akışlı yanıtın metni ve desteklenen araç çağrıları incelendikten sonra istemciye gönderilir. İlk parçanın kullanıcıya ulaşması bu yüzden gecikir.
 
 Koruma açıkken metin ve işlev çağrıları desteklenir. Görsel, ses, dosya, uzaktaki sohbet geçmişine referans veya tanınmayan yanıt biçimi geldiğinde geçit denetim hatası döndürür. Model çıktısı için tampon sınırı 4 MiB, guard'a gönderilen istek gövdesi için 192 KiB, guard yanıtı için 16 KiB'dır. Her guard denetiminin zaman sınırı 30 saniyedir. Hata ve atlanan adımlar panelden izlenebilir.
 
-**Dockerflare ile kendi modelini kullanmak için** Halkness'i Docker host'unda çalıştırabilir, paneli `127.0.0.1:4320` üzerinde tutabilirsin. Workshop'ın erişeceği özel arayüzün IP adresini `SEYIR_INFERENCE_BIND`, isteğe bağlı portu `SEYIR_INFERENCE_PORT` (varsayılan 4322), istemci için ürettiğin özel anahtarı `SEYIR_CLIENT_TOKEN` olarak Halkness sürecine ver. Bu ikinci port yalnızca kimlik doğrulamalı `/v1` yollarını sunar. Dockerflare'da bu adresin `/v1` kökünü `SELF_HOSTED_MODEL_BASE_URLS` listesine ekle. Workshop **AI providers → OpenAI-compatible endpoint** alanında aynı kökü, Halkness istemci anahtarını ve ana modelin adını gir. Bu servisler arasında güvenilen özel ağ veya TLS kullan. Docker içindeki `127.0.0.1` ilgili konteynerin kendisidir. Ana sağlayıcının adresiyle guard adresi Halkness'de ayrı ayarlanır.
+**Dockerflare ile kendi modelini kullanmak için** OS Dashboard'u Docker host'unda çalıştırabilir, paneli `127.0.0.1:4320` üzerinde tutabilirsin. Workshop'ın erişeceği özel arayüzün IP adresini `SEYIR_INFERENCE_BIND`, isteğe bağlı portu `SEYIR_INFERENCE_PORT` (varsayılan 4322), istemci için ürettiğin özel anahtarı `SEYIR_CLIENT_TOKEN` olarak OS Dashboard sürecine ver. Bu ikinci port yalnızca kimlik doğrulamalı `/v1` yollarını sunar. Dockerflare'da bu adresin `/v1` kökünü `SELF_HOSTED_MODEL_BASE_URLS` listesine ekle. Workshop **AI providers → OpenAI-compatible endpoint** alanında aynı kökü, OS Dashboard istemci anahtarını ve ana modelin adını gir. Bu servisler arasında güvenilen özel ağ veya TLS kullan. Docker içindeki `127.0.0.1` ilgili konteynerin kendisidir. Ana sağlayıcının adresiyle guard adresi OS Dashboard'da ayrı ayarlanır.
 
 ### Ana modeli hazır olduğunda bağla
 
 1. **AI Gateway → Model trafiği** bölümünde sağlayıcının API kökünü girip kaydet. OpenAI kullanacaksan kök `https://api.openai.com/v1` olur. Kendi model sunucunun OpenAI uyumlu kökünü de kullanabilirsin.
-2. OpenAI API anahtarını Halkness'i çalıştıran sürece `SEYIR_UPSTREAM_KEY` ortam değişkeni olarak ver. Çalışan servisin yeni anahtarı alması için o ortamda yeniden başlat. Özel bir sağlayıcıya anahtar gönderilecekse `SEYIR_KEY_ORIGIN` değerini o sağlayıcının tam origin'i olarak ayarla. Varsayılan `https://api.openai.com`.
-3. Tek süreçli yerel kurulumda istemcinin API kökü `http://127.0.0.1:4320/v1`. Bu modda SDK bir anahtar istiyorsa temsili bir değer kullanabilirsin. Aşağıdaki Docker kurulumunda ise istemci bağımsız gateway'in `4322` portunu ve gerçek Halkness istemci anahtarını kullanır. Her iki kurulumda da ana sağlayıcı kimliğini Halkness yönetir.
-4. İstemcinden bir istek gönder ve **Model trafiği** ekranında aç. `POST /v1/responses`, `POST /v1/chat/completions` ve `GET /v1/models` desteklenir. JSON ve akışlı yanıtlar iletilir. Chat Completions akışında kullanım bilgisini almak için istemci isteğine `"stream_options":{"include_usage":true}` ekle. Bu görünüm Halkness üzerinden geçen API çağrılarını kapsar. ChatGPT web sohbetlerinin geçmişi ayrı kalır.
-5. **Tarifeler** ekranında sağlayıcının döndürdüğü model kimliği için bir milyon token başına USD cinsinden giriş, önbellekten okunan giriş ve çıkış fiyatlarını gir. Halkness kullanım ve tarife mevcut olduğunda çağrının tahmini maliyetini saklar. Tarife değişikliği geçmiş kayıtları yeniden fiyatlandırmaz. Sağlayıcı kullanım döndürmezse eksik alanlar çizgiyle gösterilir.
+2. OpenAI API anahtarını OS Dashboard'u çalıştıran sürece `SEYIR_UPSTREAM_KEY` ortam değişkeni olarak ver. Çalışan servisin yeni anahtarı alması için o ortamda yeniden başlat. Özel bir sağlayıcıya anahtar gönderilecekse `SEYIR_KEY_ORIGIN` değerini o sağlayıcının tam origin'i olarak ayarla. Varsayılan `https://api.openai.com`.
+3. Tek süreçli yerel kurulumda istemcinin API kökü `http://127.0.0.1:4320/v1`. Bu modda SDK bir anahtar istiyorsa temsili bir değer kullanabilirsin. Aşağıdaki Docker kurulumunda ise istemci bağımsız gateway'in `4322` portunu ve gerçek OS Dashboard istemci anahtarını kullanır. Her iki kurulumda da ana sağlayıcı kimliğini OS Dashboard yönetir.
+4. İstemcinden bir istek gönder ve **Model trafiği** ekranında aç. `POST /v1/responses`, `POST /v1/chat/completions` ve `GET /v1/models` desteklenir. JSON ve akışlı yanıtlar iletilir. Chat Completions akışında kullanım bilgisini almak için istemci isteğine `"stream_options":{"include_usage":true}` ekle. Bu görünüm OS Dashboard üzerinden geçen API çağrılarını kapsar. ChatGPT web sohbetlerinin geçmişi ayrı kalır.
+5. **Tarifeler** ekranında sağlayıcının döndürdüğü model kimliği için bir milyon token başına USD cinsinden giriş, önbellekten okunan giriş ve çıkış fiyatlarını gir. OS Dashboard kullanım ve tarife mevcut olduğunda çağrının tahmini maliyetini saklar. Tarife değişikliği geçmiş kayıtları yeniden fiyatlandırmaz. Sağlayıcı kullanım döndürmezse eksik alanlar çizgiyle gösterilir.
 
 Bağlantı ayarlarındaki isteğe bağlı dakikalık sınır istemciler arasında paylaşılır. DLP, kontrol toplamı eşleşen kart numaraları ve desteklenen anahtar biçimleri için yerel kuralları uygular.
 
 ## Paneli ve AI Gateway'i ayrı konteynerlerde çalıştır
 
-`halkness/panel:local` arayüzü, ayarları ve telemetriyi sunar. `halkness/gateway:local` model çağrılarını, DLP'yi ve guard denetimini yürütür. İki süreç aynı Docker host'undaki `seyir-data` birimini kullanır. Panelde kaydedilen ayarlar gateway'in bir sonraki isteğinde geçerli olur, gateway'in yazdığı kararlar panelde görünür.
+`os-dashboard/panel:local` arayüzü, ayarları ve telemetriyi sunar. `os-dashboard/gateway:local` model çağrılarını, DLP'yi ve guard denetimini yürütür. İki süreç aynı Docker host'undaki `seyir-data` birimini kullanır. Panelde kaydedilen ayarlar gateway'in bir sonraki isteğinde geçerli olur, gateway'in yazdığı kararlar panelde görünür.
 
-Komutları Linux veya WSL Ubuntu kabuğunda Halkness klasöründen çalıştır. Her komut yalnızca ilgili imajı derler.
+Komutları Linux veya WSL Ubuntu kabuğunda OS Dashboard klasöründen çalıştır. Her komut yalnızca ilgili imajı derler.
 
 ```sh
-docker build --target panel   --tag halkness/panel:local .
-docker build --target gateway --tag halkness/gateway:local .
+docker build --target panel   --tag os-dashboard/panel:local .
+docker build --target gateway --tag os-dashboard/gateway:local .
 ```
 
 Bu Windows makinesinde Docker motoru WSL Ubuntu içinde çalışıyor. Son WSL oturumu kapanınca Ubuntu da duruyor. Windows yeniden başladıktan sonra paneli kullanacağın oturumda aşağıdaki PowerShell komutu Ubuntu'yu arka planda açık tutar. Docker, `unless-stopped` ile başlatılan servisleri tekrar açar.
@@ -108,7 +110,8 @@ docker run -d --name seyir-panel --restart unless-stopped \
   --mount type=volume,source=seyir-data,target=/data \
   --mount type=volume,source=seyir-workshop-audit,target=/seyir-audit,readonly \
   --mount "type=bind,source=$PWD/data/logs,target=/logs,readonly" \
-  -e SEYIR_LOG_DIR=/logs halkness/panel:local
+  -e DOCKERFLARE_WORKSHOP_URL=http://127.0.0.1:18080 \
+  -e SEYIR_LOG_DIR=/logs os-dashboard/panel:local
 ```
 
 [Docker panelini aç](http://127.0.0.1:4321/#gateway). Panelin konteyner portu `4320`. Yukarıdaki komut bunu host'ta `4321` olarak yayınlar. Windows'ta doğrudan çalışan panel `4320` adresini kullanmaya devam edebilir. İki kurulumun veritabanları ayrıdır. Konteynerin canlı donanım ölçümleri gördüğü Linux ortamına aittir. Salt okunur bağlanan klasör, Windows ve Docker panellerinin aynı yeni dosya loglarını izlemesini sağlar.
@@ -122,7 +125,7 @@ docker run -d --name seyir-gateway --restart unless-stopped \
   --mount "type=bind,source=$HOME/.config/seyir/gateway-token,target=/run/secrets/seyir-client,readonly" \
   -e SEYIR_CLIENT_TOKEN_FILE=/run/secrets/seyir-client \
   -e SEYIR_UPSTREAM_KEY -e SEYIR_KEY_ORIGIN \
-  -e SEYIR_GUARD_KEY -e SEYIR_GUARD_KEY_ORIGIN halkness/gateway:local
+  -e SEYIR_GUARD_KEY -e SEYIR_GUARD_KEY_ORIGIN os-dashboard/gateway:local
 ```
 
 Host istemcisinin API kökü `http://127.0.0.1:4322/v1`, aynı Docker ağındaki Workshop'ın API kökü `http://seyir-gateway:4322/v1`. OpenAI ve Qwen3Guard adreslerini hazır olana kadar boş bırakabilirsin. İhtiyaç duyulan sağlayıcı anahtarlarını yalnız gateway sürecinin ortamına ver. Panel veya gateway'i ayrı ayrı durdurup başlatabilirsin, örneğin `docker restart seyir-gateway`. Kalıcı kayıtlar `seyir-data` birimindedir.

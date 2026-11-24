@@ -12,9 +12,13 @@ const disabled = /^(\s*)access_log off;[ \t]*\r?$/gm;
 if ([...base.matchAll(disabled)].length !== 1)
   throw new Error("Beklenen nginx access_log off ayarı bulunamadı veya birden çok kez tanımlanmış.");
 
-const format = `map "$request_method:$uri" $seyir_route {
+const format = `map $uri $seyir_route {
     default "";
-    "GET:/api/version" "/api/version";
+    /api/version /api/version;
+    /healthz /healthz;
+    ~^/api(/|$) /api;
+    ~^/gatekeeper(/|$) /gatekeeper;
+    ~^/blueprint-screenshot(/|$) /blueprint-screenshot;
 }
 map $seyir_route $seyir_trace {
     "" "";
@@ -25,7 +29,7 @@ map $status $seyir_level {
     ~^4 warn;
     ~^5 error;
 }
-log_format seyir escape=json '{"time":"$time_iso8601","level":"$seyir_level","trace_id":"$request_id","message":"GET $seyir_route | HTTP $status | workshop $upstream_status | $request_time sn","status":$status,"upstream_status":"$upstream_status","duration_s":$request_time}';
+log_format seyir escape=json '{"time":"$time_iso8601","level":"$seyir_level","trace_id":"$request_id","message":"$request_method $seyir_route | HTTP $status | $request_time sn","status":$status,"upstream_status":"$upstream_status","duration_s":$request_time}';
 `;
 const config = base.replace(disabled, (_, indent) => [
   "access_log /dev/stdout seyir if=$seyir_route;",

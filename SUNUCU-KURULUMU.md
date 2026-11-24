@@ -1,6 +1,6 @@
 # Linux sunucusunda dört servisi kur
 
-Bu rehber bir Linux sunucusu, Bash, çalışan Docker Engine ve BuildKit, `curl`, `openssl` ve SSH erişimi varsayar. Sunucuda normal Docker yetkili hesabını kullan. Portlar sunucunun loopback adresinde dinler. Bilgisayardaki tünel portlarını mevcut yerel Halkness ve Dockerflare kurulumuyla çakışmayacak şekilde seçtik.
+Bu rehber bir Linux sunucusu, Bash, çalışan Docker Engine ve BuildKit, `curl`, `openssl` ve SSH erişimi varsayar. Sunucuda normal Docker yetkili hesabını kullan. Portlar sunucunun loopback adresinde dinler. Bilgisayardaki tünel portlarını mevcut yerel OS Dashboard ve Dockerflare kurulumuyla çakışmayacak şekilde seçtik.
 
 ## 1. Kaynağı Windows'tan gönder
 
@@ -8,7 +8,7 @@ PowerShell'de `SUNUCU_IP` ve SSH kullanıcı adını kendine göre değiştir.
 
 ```powershell
 $hedef = 'baris@SUNUCU_IP'
-scp "C:\Github\Halkness\data\kurulum\halkness-sunucu.tar.gz" "${hedef}:"
+scp "C:\Github\OS-Dashboard\data\kurulum\os-dashboard-sunucu.tar.gz" "${hedef}:"
 ssh $hedef
 ```
 
@@ -17,19 +17,19 @@ ssh $hedef
 Bu adımdan 7. adımın sonuna kadar komutlar sunucudaki Bash oturumunda çalışır. Arşivi yeni bir kurulum klasörüne aç.
 
 ```bash
-mkdir -p "$HOME/halkness-kurulum"
-cd "$HOME/halkness-kurulum"
-tar -xzf "$HOME/halkness-sunucu.tar.gz"
+mkdir -p "$HOME/os-dashboard-kurulum"
+cd "$HOME/os-dashboard-kurulum"
+tar -xzf "$HOME/os-dashboard-sunucu.tar.gz"
 docker version
 docker buildx version
 
-cd "$HOME/halkness-kurulum/Halkness"
-docker build --target panel   -t halkness/panel:local .
-docker build --target gateway -t halkness/gateway:local .
+cd "$HOME/os-dashboard-kurulum/OS-Dashboard"
+docker build --target panel   -t os-dashboard/panel:local .
+docker build --target gateway -t os-dashboard/gateway:local .
 
-cd "$HOME/halkness-kurulum/dockerflare-os"
+cd "$HOME/os-dashboard-kurulum/dockerflare-os"
 docker build --target workshop -t dockerflare/workshop:local .
-docker build --target web      -t dockerflare/web:local .
+docker build --target web --build-arg OS_DASHBOARD_PORT=14321 -t dockerflare/web:local .
 ```
 
 ## 3. Ağları, kalıcı veriyi ve log dosyasını hazırla
@@ -37,7 +37,7 @@ docker build --target web      -t dockerflare/web:local .
 Yeni sunucuda bir kez çalıştır. Panel ve gateway ayarlarla kararları `seyir-data` içinde paylaşır. Workshop kendi verisini `seyir-workshop-data` içinde tutar.
 
 ```bash
-cd "$HOME/halkness-kurulum/Halkness"
+cd "$HOME/os-dashboard-kurulum/OS-Dashboard"
 docker network create seyir-panel-net
 docker network create seyir-dockerflare
 docker volume create seyir-data
@@ -50,7 +50,7 @@ docker run --rm --network none --user "$(id -u):$(id -g)" \
   -v "$PWD/examples:/app/examples:ro" \
   -v "$PWD/data:/app/data" \
   -v "$PWD/../dockerflare-os/docker/web.conf:/base.conf:ro" \
-  halkness/gateway:local node /app/examples/cloudflare-os/prepare.mjs /base.conf
+  os-dashboard/gateway:local node /app/examples/cloudflare-os/prepare.mjs /base.conf
 chmod 660 data/logs/cloudflare-os-web.jsonl
 chmod 644 data/cloudflare-os/web.conf
 
@@ -64,20 +64,21 @@ test -s "$KEY" && chmod 640 "$KEY"
 
 Hazırlık konteyneri bir kez çalışıp çıkar. Ürettiği nginx yapılandırması `GET /api/version` isteklerini dosyaya yazar. Sonraki komutlardaki grup izinleri, Linux kullanıcı numaran 1000'den farklı olduğunda da servislerin kendi dosyalarına erişmesini sağlar.
 
-## 4. Halkness Panel'i ve AI Gateway'i ayrı ayrı başlat
+## 4. OS Dashboard Panel'i ve AI Gateway'i ayrı ayrı başlat
 
-**Çalışma klasörü** `~/halkness-kurulum/Halkness`. Panelde gösterilen `14322` adresi, 8. adımda bilgisayarında açacağın SSH tünelinin ucudur.
+**Çalışma klasörü** `~/os-dashboard-kurulum/OS-Dashboard`. Panelde gösterilen `14322` adresi, 8. adımda bilgisayarında açacağın SSH tünelinin ucudur.
 
 ```bash
-cd "$HOME/halkness-kurulum/Halkness"
+cd "$HOME/os-dashboard-kurulum/OS-Dashboard"
 docker run -d --name seyir-panel --restart unless-stopped \
   --network seyir-panel-net -p 127.0.0.1:4321:4320 \
   --group-add "$(stat -c %g data/logs/cloudflare-os-web.jsonl)" \
   -v seyir-data:/data -v "$PWD/data/logs:/logs:ro" \
   -v seyir-workshop-audit:/seyir-audit:ro \
   -e SEYIR_LOG_DIR=/logs \
+  -e DOCKERFLARE_WORKSHOP_URL=http://127.0.0.1:28080 \
   -e SEYIR_PUBLIC_GATEWAY_URL=http://127.0.0.1:14322/v1 \
-  halkness/panel:local
+  os-dashboard/panel:local
 
 KEY="$HOME/.config/seyir/gateway-token"
 docker run -d --name seyir-gateway --restart unless-stopped \
@@ -85,15 +86,15 @@ docker run -d --name seyir-gateway --restart unless-stopped \
   --group-add "$(stat -c %g "$KEY")" \
   -v seyir-data:/data -v "$KEY:/run/secrets/seyir-client:ro" \
   -e SEYIR_CLIENT_TOKEN_FILE=/run/secrets/seyir-client \
-  halkness/gateway:local
+  os-dashboard/gateway:local
 ```
 
 ## 5. Dockerflare Workshop'ı başlat
 
-**Çalışma klasörü** `~/halkness-kurulum/dockerflare-os`. Yönetici hesabı için `baris` yerine istersen kendi kullanıcı adını yaz. `PUBLIC_BASE_URL` tarayıcıda kullanacağın adresle eşleşir.
+**Çalışma klasörü** `~/os-dashboard-kurulum/dockerflare-os`. Yönetici hesabı için `baris` yerine istersen kendi kullanıcı adını yaz. `PUBLIC_BASE_URL` tarayıcıda kullanacağın adresle eşleşir.
 
 ```bash
-cd "$HOME/halkness-kurulum/dockerflare-os"
+cd "$HOME/os-dashboard-kurulum/dockerflare-os"
 docker run -d --name seyir-dockerflare-workshop --restart unless-stopped \
   --network seyir-dockerflare --network-alias workshop \
   -v seyir-workshop-data:/data \
@@ -110,10 +111,10 @@ docker run -d --name seyir-dockerflare-workshop --restart unless-stopped \
 
 ## 6. Dockerflare Web'i başlat
 
-**Çalışma klasörü** `~/halkness-kurulum/Halkness`. Web imajını Dockerflare klasöründe derledin. Bu komutta Halkness klasörüne dönüyorsun çünkü nginx yapılandırması ve erişim logu burada.
+**Çalışma klasörü** `~/os-dashboard-kurulum/OS-Dashboard`. Web imajını Dockerflare klasöründe derledin. Bu komutta OS Dashboard klasörüne dönüyorsun çünkü nginx yapılandırması ve erişim logu burada.
 
 ```bash
-cd "$HOME/halkness-kurulum/Halkness"
+cd "$HOME/os-dashboard-kurulum/OS-Dashboard"
 docker run -d --name seyir-dockerflare-web --restart unless-stopped \
   --network seyir-dockerflare -p 127.0.0.1:18080:8080 \
   --group-add "$(stat -c %g data/logs/cloudflare-os-web.jsonl)" \
@@ -138,6 +139,14 @@ Dört konteyner `Up`, panel `{"ok":true}`, kimliksiz gateway çağrısı `401`, 
 curl -fsS "http://127.0.0.1:4321/api/events?trace_id=BURAYA_IZ_KIMLIGI"
 ```
 
+Aynı denetimi Linux sunucusunda tek komutla tekrarlayabilirsin. Denetim, gerçek bir Web isteğinin panelde aynı iz kimliğiyle göründüğünü ve Workshop sohbet kaynağının bağlı olduğunu kontrol eder.
+
+```bash
+cd "$HOME/os-dashboard-kurulum/OS-Dashboard"
+docker run --rm --network host -v "$PWD/examples:/app/examples:ro" \
+  os-dashboard/gateway:local node /app/examples/cloudflare-os/check-integration.mjs
+```
+
 Yeni veritabanında DLP varsayılan olarak kapalıdır. Model ve guard bağlantılarını boş bırakarak DLP'yi açabilirsin.
 
 ```bash
@@ -153,15 +162,17 @@ Bilgisayarında ikinci bir PowerShell penceresi aç. Tüneli kullandığın sür
 ssh -N -o ExitOnForwardFailure=yes -L 14321:127.0.0.1:4321 -L 14322:127.0.0.1:4322 -L 28080:127.0.0.1:18080 baris@SUNUCU_IP
 ```
 
-- [Halkness AI Gateway](http://127.0.0.1:14321/#gateway)
+- [OS Dashboard AI Gateway](http://127.0.0.1:14321/#gateway)
 - [Workshop sohbetleri, onaylar ve maliyet](http://127.0.0.1:14321/#workshop)
 - [Dockerflare erişim logları](http://127.0.0.1:14321/#logs)
 - [Dockerflare Web ve Workshop](http://127.0.0.1:28080/)
 
-Dockerflare'da ilk hesabını `ADMINS` için seçtiğin adla oluştur. Workshop'ın gateway adresi Docker ağı içinde `http://seyir-gateway:4322/v1`. Modelini bağlama zamanı geldiğinde **AI providers → OpenAI-compatible endpoint** alanına bu adresi, Halkness istemci anahtarını ve gerçek model kimliğini gir. Halkness'in **Koruma ayarları** bölümünden gerçek Qwen3Guard adresini ayrıca bağlayabilirsin.
+Dockerflare'da ilk hesabını `ADMINS` için seçtiğin adla oluştur. Workshop'ın gateway adresi Docker ağı içinde `http://seyir-gateway:4322/v1`. Modelini bağlama zamanı geldiğinde **AI providers → OpenAI-compatible endpoint** alanına bu adresi, OS Dashboard istemci anahtarını ve gerçek model kimliğini gir. OS Dashboard'un **Koruma ayarları** bölümünden gerçek Qwen3Guard adresini ayrıca bağlayabilirsin.
 
-Bu kurulumda panele aktarılan Web erişim logu `GET /api/version` yolunu kapsar. Gateway, üzerinden geçen model çağrılarının kararlarını ayrıca kaydeder.
+Dockerflare’da profil menüsünden **Admin** sayfasına gir. **OS Dashboard** bağlantısı sohbet denetimini açar. Panelde **Dockerflare OS’u aç** bağlantısı Workshop’a döner. SSH tüneli için seçtiğin portları değiştirirsen Web derlemesindeki `OS_DASHBOARD_PORT` ve panelin `DOCKERFLARE_WORKSHOP_URL` değerlerini de güncelle.
 
-**Workshop sohbetleri** bölümünden bir sohbeti aç. Workshop yaklaşık beş saniyede bir kimlikleri, araç adlarını ve onay kararlarını ayrı veri birimine aktarır. Panel yalnızca bu özeti okur. Yeni model isteklerinde Workshop gateway'in verdiği istek kimliğini saklar. Halkness, ana model ve etkin guard çağrılarının tokenlarını o andaki tarifeyle fiyatlar. Eksik model tarifesi veya kullanım varsa bilinen tutarı ve kaç çağrının fiyatlanamadığını gösterir. Eski sohbetlerde kaydedilmeyen onaylayan kişi ve yardımcı model çağrıları bilinmiyor olarak kalabilir. Dört servisi bu arşivden derlemek Workshop tarafındaki kayıt desteğini de kurar.
+Web erişim kaydı isteğin yöntemini, durum kodunu, süresini ve iz kimliğini içerir. `/api/version` ve `/healthz` kendi adıyla görünür. Diğer API, gatekeeper ve şablon görüntüsü istekleri yol grubuyla kaydedilir. Sorgu parametreleri ve çağrı içerikleri bu günlüğe yazılmaz. WebSocket kaydı bağlantı kapandığında oluşur.
+
+**Workshop sohbetleri** bölümünden bir sohbeti aç. Workshop yaklaşık beş saniyede bir kimlikleri, araç adlarını ve onay kararlarını ayrı veri birimine aktarır. Panel yalnızca bu özeti okur. Yeni model isteklerinde Workshop gateway'in verdiği istek kimliğini saklar. OS Dashboard, ana model ve etkin guard çağrılarının tokenlarını o andaki tarifeyle fiyatlar. Eksik model tarifesi veya kullanım varsa bilinen tutarı ve kaç çağrının fiyatlanamadığını gösterir. Eski sohbetlerde kaydedilmeyen onaylayan kişi ve yardımcı model çağrıları bilinmiyor olarak kalabilir. Dört servisi bu arşivden derlemek Workshop tarafındaki kayıt desteğini de kurar.
 
 Sohbetin maliyet kayıtları `seyir-data` biriminde saklanır. Genel gateway loglarının yedi günlük süresi dolunca da sohbet ekranında tutarı görebilirsin. Kendi sağlayıcını bağlamadan iki kullanıcıyla örneği tekrarlamak için [Workshop sohbet denetimi](examples/cloudflare-os/workshop-audit/README.md) adımlarını izle.

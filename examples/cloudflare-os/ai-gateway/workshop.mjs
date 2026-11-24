@@ -19,7 +19,7 @@ for (let attempt = 0; ; attempt++) {
 
 using session = webSocketConnection("ws://web:8080/api", { Origin: origin }).main;
 // This one-use private deployment only needs an unpredictable 32-byte verifier.
-const token = await session.createAccount("seyirdemo", "Halkness demo", randomBytes(32));
+const token = await session.createAccount("seyirdemo", "OS Dashboard demo", randomBytes(32));
 using api = await session.authenticate(token);
 assert.equal(await api.amIAdmin(), true);
 using ws = await api.newWorkspace();

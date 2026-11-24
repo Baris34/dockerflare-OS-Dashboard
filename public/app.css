@@ -151,6 +151,9 @@ nav {
 .navItem:hover {
   background: #2c3239;
 }
+.navItem[hidden] {
+  display: none;
+}
 .navItem.active {
   color: #ffb77c;
   background: #39312b;

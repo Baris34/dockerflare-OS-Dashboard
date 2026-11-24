@@ -59,7 +59,7 @@ if (
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   const gateway = await startGateway();
-  console.log("Halkness gateway " + gateway.url);
+  console.log("OS Dashboard gateway " + gateway.url);
   for (const signal of ["SIGTERM", "SIGINT"])
     process.once(signal, () => gateway.close().then(() => process.exit(0)));
 }

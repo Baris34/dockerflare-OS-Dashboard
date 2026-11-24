@@ -121,7 +121,7 @@ try {
   const report = verify(chats, evidence);
   if (options.length) {
     const added = importVolume ? Number(volumeImporter(false, evidence.events)) : importEvents(dbFile, evidence.events);
-    console.log("Halkness'e eklenen olay: " + added + " (" + (importVolume || dbFile) + ")");
+    console.log("OS Dashboard'a eklenen olay: " + added + " (" + (importVolume || dbFile) + ")");
   }
   console.table(report);
   console.log(`Model HTTP istekleri ${evidence.model.total}, Guard giriş denetimleri ${evidence.guard.input}, çıkış denetimleri ${evidence.guard.output}.`);
