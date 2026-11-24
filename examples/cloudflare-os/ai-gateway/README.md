@@ -1,6 +1,6 @@
-# Dockerflare Workshop sohbetini Seyir’de izle
+# Dockerflare Workshop sohbetini Halkness’de izle
 
-Bu örnek gerçek Dockerflare web ve Workshop imajlarını başlatır. İstemci, web servisi üzerinden bir Cap’n Web oturumu açar, geçici bir çalışma alanı oluşturur ve dört sohbet gönderir. Workshop bu sohbetleri Seyir’in kimlik doğrulamalı çıkarım portuna yollar. DLP’yi ve istek kaydını Seyir’in kendi gateway kodu çalıştırır. Model ve Qwen3Guard uyumlu sınıflandırıcı, kapalı bir Docker ağında çalışan iki HTTP test servisidir. Sınıflandırıcı zararsız bir işarete göre sabit bir yanıt verir. Bu çalışma politika zincirini ve Workshop’un aldığı sonucu doğrular.
+Bu örnek gerçek Dockerflare web ve Workshop imajlarını başlatır. İstemci, web servisi üzerinden bir Cap’n Web oturumu açar, geçici bir çalışma alanı oluşturur ve dört sohbet gönderir. Workshop bu sohbetleri Halkness’in kimlik doğrulamalı çıkarım portuna yollar. DLP’yi ve istek kaydını Halkness’in kendi gateway kodu çalıştırır. Model ve Qwen3Guard uyumlu sınıflandırıcı, kapalı bir Docker ağında çalışan iki HTTP test servisidir. Sınıflandırıcı zararsız bir işarete göre sabit bir yanıt verir. Bu çalışma politika zincirini ve Workshop’un aldığı sonucu doğrular.
 
 ## İmajları ayrı derle
 
@@ -13,10 +13,10 @@ docker buildx build --builder default --load --target workshop -t dockerflare/wo
 docker buildx build --builder default --load --target source -t dockerflare/checks:local .
 ```
 
-Seyir deposunda her örnek servisini kendi etiketiyle derle. `default` builder yerel Docker motorundaki taban imajlarına erişir. Model ve Guard imajları aynı küçük HTTP sunucusunu farklı rollerle başlatır. Gateway imajı Seyir’in politika, SQLite ve çıkarım portu kodunu içerir. İstemci imajında dört Workshop sohbetini çalıştıran RPC programı bulunur.
+Halkness deposunda her örnek servisini kendi etiketiyle derle. `default` builder yerel Docker motorundaki taban imajlarına erişir. Model ve Guard imajları aynı küçük HTTP sunucusunu farklı rollerle başlatır. Gateway imajı Halkness’in politika, SQLite ve çıkarım portu kodunu içerir. İstemci imajında dört Workshop sohbetini çalıştıran RPC programı bulunur.
 
 ```sh
-cd /mnt/c/Github/Seyir
+cd /mnt/c/Github/Halkness
 df=examples/cloudflare-os/ai-gateway/Dockerfile
 docker buildx build --builder default --load -f "$df" --target model   -t seyir/demo-model:local .
 docker buildx build --builder default --load -f "$df" --target guard   -t seyir/demo-guard:local .
@@ -49,7 +49,7 @@ docker run -d --pull=never --name "$lab-model" --network "$lab-fixtures" --netwo
 docker run -d --pull=never --name "$lab-guard" --network "$lab-fixtures" --network-alias guard seyir/demo-guard:local
 ```
 
-**Örnek Seyir gateway’i** rastgele bir istemci anahtarı üretir ve denetim kararlarını kendi SQLite birimine yazar.
+**Örnek Halkness gateway’i** rastgele bir istemci anahtarı üretir ve denetim kararlarını kendi SQLite birimine yazar.
 
 ```sh
 docker run -d --pull=never --name "$lab-gateway" --network "$lab-front" --network-alias gateway \
@@ -89,7 +89,7 @@ docker volume rm "$lab-worker-data" "$lab-gateway-data" "$lab-auth"
 
 ## İsteğe bağlı uçtan uca kontrol ve panele aktarma
 
-İmajları derledikten sonra aynı altı servisi ve iz doğrulamasını tek komutla da çalıştırabilirsin. Betik her koşuda kendi ağ ve veri birimlerini oluşturup sonunda temizler. PowerShell’de Seyir kökünden çalıştır.
+İmajları derledikten sonra aynı altı servisi ve iz doğrulamasını tek komutla da çalıştırabilirsin. Betik her koşuda kendi ağ ve veri birimlerini oluşturup sonunda temizler. PowerShell’de Halkness kökünden çalıştır.
 
 ```powershell
 node examples/cloudflare-os/ai-gateway/run.mjs

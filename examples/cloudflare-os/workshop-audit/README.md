@@ -11,7 +11,7 @@ Bu örnek yeni bir Docker ağında gerçek Workshop’u başlatır. `auditdemo` 
 
 ## İmajlar
 
-WSL Ubuntu veya Linux kabuğunda Seyir deposunun kökünden çalıştır. İki Dockerflare imajı (`dockerflare/web:local` ve `dockerflare/checks:local`) ile denetim dışa aktarıcısını içeren `seyir/workshop:local` önceden hazırlanmış olmalı. `checks` tabanı Dockerflare deposunun `source` derleme hedefidir.
+WSL Ubuntu veya Linux kabuğunda Halkness deposunun kökünden çalıştır. İki Dockerflare imajı (`dockerflare/web:local` ve `dockerflare/checks:local`) ile denetim dışa aktarıcısını içeren `seyir/workshop:local` önceden hazırlanmış olmalı. `checks` tabanı Dockerflare deposunun `source` derleme hedefidir.
 
 ```sh
 df=examples/cloudflare-os/workshop-audit/Dockerfile
@@ -21,7 +21,7 @@ docker buildx build --builder default --load -f "$df" --target checks -t seyir/w
 bash examples/cloudflare-os/workshop-audit/run.sh
 ```
 
-Sunucu kurulum rehberini izlediysen Workshop imajının etiketi `dockerflare/workshop:local` olur. Bu durumda yukarıdaki üç örnek imajdan önce Seyir klasöründe `docker build --target source -t dockerflare/checks:local ../dockerflare-os` çalıştır. Son satırda `SEYIR_AUDIT_WORKSHOP_IMAGE=dockerflare/workshop:local bash examples/cloudflare-os/workshop-audit/run.sh` kullan.
+Sunucu kurulum rehberini izlediysen Workshop imajının etiketi `dockerflare/workshop:local` olur. Bu durumda yukarıdaki üç örnek imajdan önce Halkness klasöründe `docker build --target source -t dockerflare/checks:local ../dockerflare-os` çalıştır. Son satırda `SEYIR_AUDIT_WORKSHOP_IMAGE=dockerflare/workshop:local bash examples/cloudflare-os/workshop-audit/run.sh` kullan.
 
 Betik her servisi ayrı `docker run` komutuyla başlatır. İç Docker ağında bir host portu yayımlanmaz. Workshop’un model adresi, izin listesindeki adres ve `SEYIR_GATEWAY_ROOT` birebir `http://gateway:4322/v1` olur. Gateway istemci anahtarını geçici bir birimde üretir.
 
@@ -36,4 +36,4 @@ Başarılı koşunun son satırındaki `Metadata volume` iki dosya içerir.
 | `workshop.sqlite` | Sohbet başlangıcı, aktör, araç ve onay olayları, model istek kimlikleri |
 | `gateway.sqlite` | Aynı dört istek için model adı, HTTP durumu, süre, token sayıları, örnek tarife ve hesaplanan tutar |
 
-Bu birimi Seyir panelinin örnek veri kaynağına salt okunur bağlayabilirsin. Betik her iki dosyanın da salt okunur mount üzerinden UID 1000 ile açıldığını kontrol eder. Ham Workshop deposu, auth birimi, geçici gateway ve bütün örnek konteynerleri koşu sonunda kaldırılır. Sonuç birimi, silmek istediğinde `docker volume rm <Metadata-volume-adı>` çalıştırana kadar kalır.
+Bu birimi Halkness panelinin örnek veri kaynağına salt okunur bağlayabilirsin. Betik her iki dosyanın da salt okunur mount üzerinden UID 1000 ile açıldığını kontrol eder. Ham Workshop deposu, auth birimi, geçici gateway ve bütün örnek konteynerleri koşu sonunda kaldırılır. Sonuç birimi, silmek istediğinde `docker volume rm <Metadata-volume-adı>` çalıştırana kadar kalır.

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import http from "node:http";
 
-test("Seyir records usage, streamed usage, policy blocks and searchable file logs across restarts", async (t) => {
+test("Halkness records usage, streamed usage, policy blocks and searchable file logs across restarts", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "seyir-test-"));
   const messages = [];
   const upstream = http.createServer(async (req, res) => {

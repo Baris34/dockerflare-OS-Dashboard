@@ -46,7 +46,7 @@ const pages = {
   sources: ["Veri kaynakları", "Veri kaynakları", "plug"],
 };
 const sourceNames = {
-  seyir: "Seyir",
+  seyir: "Halkness",
   host: "Sunucu",
   files: "Dosya",
   system: "Sistem",
@@ -163,7 +163,7 @@ function nav() {
 function updateHead() {
   $("#crumb").textContent = pages[page][0];
   const title = page === "workshop" && (workspaceId || chatId) ? "Sohbet ayrıntısı" : pages[page][1];
-  document.title = "Seyir · " + title;
+  document.title = "Halkness · " + title;
   const ranges = Object.entries(rangeNames)
     .map(
       ([t, n]) =>
@@ -287,7 +287,7 @@ function table(title, compact = false) {
     page === "gateway"
       ? "Henüz model isteği yok"
       : "Bu aralıkta eşleşen olay yok";
-  return `<section class="panel"><div class="panelHead"><h2>${title} <span class="pillCount">${num(eventPage.total)}</span></h2>${compact ? `<button class="linkButton" data-a="logs">Tüm loglar ${icon("chevron", 13)}</button>` : ""}</div>${rows ? `<div class="tableWrap"><table class="eventTable"><thead><tr><th class="colTime">ZAMAN</th><th class="colLevel">SEVİYE</th><th class="colSource">SERVİS</th><th>OLAY</th><th class="colGo"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${icon(page === "gateway" ? "activity" : "search", 24)}<strong>${message}</strong>${page === "gateway" ? "İstemcini Seyir gateway adresine bağladığında çağrılar burada görünür." : "Zaman aralığını veya filtreleri değiştirebilirsin."}</div>`}${compact ? "" : pagination()}</section>`;
+  return `<section class="panel"><div class="panelHead"><h2>${title} <span class="pillCount">${num(eventPage.total)}</span></h2>${compact ? `<button class="linkButton" data-a="logs">Tüm loglar ${icon("chevron", 13)}</button>` : ""}</div>${rows ? `<div class="tableWrap"><table class="eventTable"><thead><tr><th class="colTime">ZAMAN</th><th class="colLevel">SEVİYE</th><th class="colSource">SERVİS</th><th>OLAY</th><th class="colGo"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${icon(page === "gateway" ? "activity" : "search", 24)}<strong>${message}</strong>${page === "gateway" ? "İstemcini Halkness gateway adresine bağladığında çağrılar burada görünür." : "Zaman aralığını veya filtreleri değiştirebilirsin."}</div>`}${compact ? "" : pagination()}</section>`;
 }
 function tiles() {
   const h = info.host;
@@ -685,7 +685,7 @@ function configDialog() {
   const cfg = info.settings;
   dialog(
     "MODEL GATEWAY",
-    `<h2>Bağlantı ayarları</h2><p class="copyText">Model istemcinin API kökünü <code>${esc(info.publicGatewayUrl || location.origin + "/v1")}</code> olarak ayarla. Seyir çağrıları aşağıdaki sağlayıcıya iletir.</p><form id="configForm"><label class="formField">Sağlayıcının API kökü<input id="endpoint" type="url" placeholder="https://api.openai.com/v1" value="${esc(cfg.upstream)}"></label><div class="copyText">Anahtar gerektiren sağlayıcılar için servis ortamında <code>SEYIR_UPSTREAM_KEY</code> kullanılır. ${info.keyReady === null ? "Sağlayıcı anahtarı gateway sürecinde yönetilir." : info.keyReady ? "Kayıtlı adres için sağlayıcı anahtarı tanımlı." : "Kayıtlı adres için sağlayıcı anahtarı tanımlı değil."}</div><label class="formField">Dakikalık istek sınırı<input id="rateLimit" type="number" min="0" max="100000" value="${cfg.rate}" required></label><small class="muted">0 sınırı kapatır. Tüm istemciler aynı pencereyi paylaşır.</small><div class="actions">${btn("cancel", "İptal")}<button class="btn primary" type="submit">Kaydet</button></div><div id="cfgErr" role="alert"></div></form>`,
+    `<h2>Bağlantı ayarları</h2><p class="copyText">Model istemcinin API kökünü <code>${esc(info.publicGatewayUrl || location.origin + "/v1")}</code> olarak ayarla. Halkness çağrıları aşağıdaki sağlayıcıya iletir.</p><form id="configForm"><label class="formField">Sağlayıcının API kökü<input id="endpoint" type="url" placeholder="https://api.openai.com/v1" value="${esc(cfg.upstream)}"></label><div class="copyText">Anahtar gerektiren sağlayıcılar için servis ortamında <code>SEYIR_UPSTREAM_KEY</code> kullanılır. ${info.keyReady === null ? "Sağlayıcı anahtarı gateway sürecinde yönetilir." : info.keyReady ? "Kayıtlı adres için sağlayıcı anahtarı tanımlı." : "Kayıtlı adres için sağlayıcı anahtarı tanımlı değil."}</div><label class="formField">Dakikalık istek sınırı<input id="rateLimit" type="number" min="0" max="100000" value="${cfg.rate}" required></label><small class="muted">0 sınırı kapatır. Tüm istemciler aynı pencereyi paylaşır.</small><div class="actions">${btn("cancel", "İptal")}<button class="btn primary" type="submit">Kaydet</button></div><div id="cfgErr" role="alert"></div></form>`,
   );
   $("#configForm").onsubmit = async (e) => {
     e.preventDefault();
@@ -764,10 +764,10 @@ function sourceDialog(k) {
   }
   const s = info.sources[k];
   const contents = {
-    host: `CPU ve RAM yaklaşık 2,5 saniyede bir örneklenir. Disk oranı Seyir veri dizininin bulunduğu birime aittir.`,
+    host: `CPU ve RAM yaklaşık 2,5 saniyede bir örneklenir. Disk oranı Halkness veri dizininin bulunduğu birime aittir.`,
     system: `Windows’ta Application ve System kanallarının son altı saatinden erişilebilen kayıtlar alınır. Linux’ta journalctl kullanılır.`,
     files: `Bu dizine .log, .jsonl veya .ndjson dosyası ekle. Yeni satırlar otomatik okunur. Konumu SEYIR_LOG_DIR ile değiştirebilirsin.`,
-    docker: `Seyir, çalışan Docker motorunu CLI üzerinden okur. Görünecek konteynerlerin daemon’u ile aynı Docker bağlamını kullanmalı.`,
+    docker: `Halkness, çalışan Docker motorunu CLI üzerinden okur. Görünecek konteynerlerin daemon’u ile aynı Docker bağlamını kullanmalı.`,
     ingest: `Bir uygulama yerel API’ye service, level ve message gönderebilir. Aynı trace_id taşıyan olaylar ayrıntı ekranında birlikte açılır.`,
   };
   const sample =
@@ -959,7 +959,7 @@ function pricesDialog() {
       )}</div><button class="linkButton removePrice" type="button">Tarifeyi kaldır</button></fieldset>`;
   dialog(
     "MODEL GATEWAY",
-    `<h2>Model tarifeleri</h2><p class="copyText">Bir milyon token başına USD fiyatlarını gir. Seyir tamamlanan çağrıda geçerli tarifeyi saklar. Tarifesi olmayan modelin bedeli belirsiz görünür.</p><form id="pricesForm"><div id="priceRows">${prices.map(row).join("")}</div><button type="button" id="addPrice" class="btn">Tarife ekle</button><div class="actions"><button type="button" class="btn" data-a="cancel">İptal</button><button class="btn primary">Kaydet</button></div><p id="priceError" role="alert"></p></form>`,
+    `<h2>Model tarifeleri</h2><p class="copyText">Bir milyon token başına USD fiyatlarını gir. Halkness tamamlanan çağrıda geçerli tarifeyi saklar. Tarifesi olmayan modelin bedeli belirsiz görünür.</p><form id="pricesForm"><div id="priceRows">${prices.map(row).join("")}</div><button type="button" id="addPrice" class="btn">Tarife ekle</button><div class="actions"><button type="button" class="btn" data-a="cancel">İptal</button><button class="btn primary">Kaydet</button></div><p id="priceError" role="alert"></p></form>`,
   );
   $("#addPrice").onclick = () =>
     $("#priceRows").insertAdjacentHTML(

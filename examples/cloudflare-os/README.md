@@ -1,10 +1,10 @@
-# Cloudflare OS isteğini Seyir'de izle
+# Cloudflare OS isteğini Halkness'de izle
 
-Web konteynerindeki nginx, `GET /api/version` isteğini Workshop'a gönderir. Yanıtta gelen `X-Seyir-Trace` başlığı, aynı isteğin Docker günlüğündeki ve Seyir'deki kaydını bulur. Bu örnek model hesabı gerektirmez.
+Web konteynerindeki nginx, `GET /api/version` isteğini Workshop'a gönderir. Yanıtta gelen `X-Seyir-Trace` başlığı, aynı isteğin Docker günlüğündeki ve Halkness'deki kaydını bulur. Bu örnek model hesabı gerektirmez.
 
 ## Çalışan örneği dene
 
-Windows'ta Seyir, WSL Ubuntu'da Docker çalışıyorsa PowerShell'den bir istek gönder.
+Windows'ta Halkness, WSL Ubuntu'da Docker çalışıyorsa PowerShell'den bir istek gönder.
 
 ```powershell
 $response = Invoke-WebRequest http://127.0.0.1:18080/api/version
@@ -14,11 +14,11 @@ $trace
 wsl -d Ubuntu -- docker logs --since 2m seyir-dockerflare-web 2>$null | Select-String -SimpleMatch $trace
 ```
 
-Web, erişim kaydını doğrudan [paylaşılan dosyaya](../../data/logs/cloudflare-os-web.jsonl) ekler. Seyir'in dosya toplayıcısı yaklaşık dört saniyede bir yeni satırları okur. [Docker panelinin log akışında](http://127.0.0.1:4321/#logs) kaynak olarak **Dosya** seç, `GET /api/version` ara ve satırı aç. **İz kimliği** yanıt başlığındaki değerle eşleşir. PowerShell'de aynı olayı `(Invoke-RestMethod "http://127.0.0.1:4321/api/events?trace_id=$trace").items` ile de görebilirsin.
+Web, erişim kaydını doğrudan [paylaşılan dosyaya](../../data/logs/cloudflare-os-web.jsonl) ekler. Halkness'in dosya toplayıcısı yaklaşık dört saniyede bir yeni satırları okur. [Docker panelinin log akışında](http://127.0.0.1:4321/#logs) kaynak olarak **Dosya** seç, `GET /api/version` ara ve satırı aç. **İz kimliği** yanıt başlığındaki değerle eşleşir. PowerShell'de aynı olayı `(Invoke-RestMethod "http://127.0.0.1:4321/api/events?trace_id=$trace").items` ile de görebilirsin.
 
 ## Web ve Workshop imajlarını ayrı derle
 
-Seyir ve `dockerflare-os` depoları aynı üst dizindeyken WSL veya Linux kabuğunda **Seyir kökünden** çalıştır. Her komut Dockerflare'ın Dockerfile dosyasındaki ayrı bir hedefi derler.
+Halkness ve `dockerflare-os` depoları aynı üst dizindeyken WSL veya Linux kabuğunda **Halkness kökünden** çalıştır. Her komut Dockerflare'ın Dockerfile dosyasındaki ayrı bir hedefi derler.
 
 ```sh
 docker build --target workshop --tag dockerflare/workshop:local ../dockerflare-os
@@ -54,7 +54,7 @@ chmod g+rw data/logs/cloudflare-os-web.jsonl
 
 ## Önce Workshop'u, ardından Web'i çalıştır
 
-Workshop `/data` altında kalıcı birimi kullanır. Ağdaki `workshop` adı Web yapılandırmasının beklediği adrestir. Workshop için izin verilen model API kökü, aynı ağdaki bağımsız Seyir Gateway servisidir. Bu ayarla örneğin `GET /api/version` isteği model çağırmadan çalışır. Bir model bağlamak istediğinde sağlayıcı adresini Seyir panelinde yapılandırabilirsin.
+Workshop `/data` altında kalıcı birimi kullanır. Ağdaki `workshop` adı Web yapılandırmasının beklediği adrestir. Workshop için izin verilen model API kökü, aynı ağdaki bağımsız Halkness Gateway servisidir. Bu ayarla örneğin `GET /api/version` isteği model çağırmadan çalışır. Bir model bağlamak istediğinde sağlayıcı adresini Halkness panelinde yapılandırabilirsin.
 
 ```sh
 docker run --detach --name seyir-dockerflare-workshop \
@@ -86,7 +86,7 @@ docker run --detach --name seyir-dockerflare-web \
 
 ## Logların nasıl aktığını kontrol et
 
-Her `GET /api/version` çağrısı sırasında nginx hem Docker günlüğüne hem de kendisine yazma izniyle bağlanan dosyaya bir satır yazar. Seyir bu dosyanın bulunduğu klasörü salt okunur açar. İki taraftaki iz kimliğini karşılaştırmak için şu komutları çalıştır.
+Her `GET /api/version` çağrısı sırasında nginx hem Docker günlüğüne hem de kendisine yazma izniyle bağlanan dosyaya bir satır yazar. Halkness bu dosyanın bulunduğu klasörü salt okunur açar. İki taraftaki iz kimliğini karşılaştırmak için şu komutları çalıştır.
 
 ```sh
 curl -si http://127.0.0.1:18080/api/version

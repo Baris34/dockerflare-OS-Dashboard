@@ -10,7 +10,7 @@ export function checkDatabase(file) {
   const db = new DatabaseSync(file, { readOnly: true });
   try {
     const tables = db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name IN ('state','events','samples')").all();
-    assert.equal(tables.length, 3, "Hedefte hazır bir Seyir veritabanı gerekli");
+    assert.equal(tables.length, 3, "Hedefte hazır bir Halkness veritabanı gerekli");
     db.prepare("SELECT request_id, trace_id, operation FROM events LIMIT 0");
   } finally {
     db.close();

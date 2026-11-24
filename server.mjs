@@ -104,7 +104,7 @@ export async function start(options = {}) {
           store.put("settings", updated);
           store.record({
             source: "seyir",
-            service: "Seyir",
+            service: "Halkness",
             kind: "config",
             message: "Model gateway ayarları güncellendi.",
           });
@@ -205,7 +205,7 @@ export async function start(options = {}) {
   store.prune();
   store.record({
     source: "seyir",
-    service: "Seyir",
+    service: "Halkness",
     level: "info",
     kind: "startup",
     message: "Gözlem servisi başlatıldı.",
@@ -238,7 +238,7 @@ if (
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   const app = await start();
-  console.log("Seyir " + app.url);
+  console.log("Halkness " + app.url);
   for (const signal of ["SIGINT", "SIGTERM"])
     process.once(signal, () => app.close().then(() => process.exit(0)));
 }
