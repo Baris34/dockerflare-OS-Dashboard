@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#191d22" />
+    <title>Seyir · Sistem özeti</title>
+    <link rel="icon" href="/mark.svg" />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <a href="#main" class="skip">İçeriğe geç</a>
+    <div id="shell">
+      <aside id="sidebar">
+        <div class="brand">
+          <img src="/mark.svg" alt="" width="37" height="37" /><span
+            >Seyir</span
+          >
+        </div>
+        <div class="ws">
+          <div class="workspaceIcon" data-icon="layers"></div>
+          <div>
+            <strong>Yerel çalışma alanı</strong><small>Sistem izleme</small>
+          </div>
+        </div>
+        <div class="nav-label">GÖZLEM</div>
+        <nav id="nav"></nav>
+        <div class="nav-label">YÖNETİM</div>
+        <nav id="adminNav"></nav>
+        <div class="sidebarBottom">
+          <div class="serverAvatar" data-icon="server"></div>
+          <div>
+            <strong id="sideHost">Yerel sunucu</strong
+            ><small id="sideStatus">Bağlanıyor</small>
+          </div>
+        </div>
+      </aside>
+      <button id="scrim" aria-label="Menüyü kapat"></button>
+      <div class="workspace">
+        <header id="top">
+          <button
+            class="iconbtn mobile"
+            id="menu"
+            aria-label="Menüyü aç"
+            data-icon="menu"
+          ></button
+          ><a class="mobileBrand" aria-label="Seyir" href="#overview"
+            ><img src="/mark.svg" width="24" height="24" alt="" /> Seyir</a
+          >
+          <div class="crumb">
+            <span data-icon="layers"></span><span>Çalışma alanı</span><b>/</b
+            ><strong id="crumb">Genel bakış</strong>
+          </div>
+          <div class="headRight">
+            <button class="quickSearch" id="search">
+              <span data-icon="search"></span><span>Loglarda ara</span
+              ><kbd>Ctrl K</kbd></button
+            ><span class="topRule"></span
+            ><span class="hostBadge" title="Bu cihazda çalışan panel"
+              ><span data-icon="monitor"></span> localhost</span
+            >
+          </div>
+        </header>
+        <main id="main" tabindex="-1">
+          <div id="pageHead"></div>
+          <div id="content" aria-busy="true">
+            <p class="empty">Yerel ölçümler alınıyor…</p>
+          </div>
+        </main>
+        <footer>
+          <span
+            ><i class="dot"></i> Seyir <span class="footmute">/</span> Yerel
+            gözlem</span
+          ><span id="fresh">Bağlantı kuruluyor</span>
+        </footer>
+      </div>
+    </div>
+    <dialog id="drawer" aria-labelledby="dialogLabel">
+      <div class="dialogInner">
+        <div class="dialogTop">
+          <span class="eyebrow" id="dialogLabel">OLAY AYRINTISI</span
+          ><button
+            class="iconbtn"
+            id="dismiss"
+            aria-label="Kapat"
+            data-icon="close"
+          ></button>
+        </div>
+        <div id="dialogBody"></div>
+      </div>
+    </dialog>
+    <div id="notice" role="status"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

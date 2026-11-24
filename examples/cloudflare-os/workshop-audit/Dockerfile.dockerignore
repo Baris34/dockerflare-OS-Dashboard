@@ -1,0 +1,6 @@
+**
+!lib/*.mjs
+!examples/cloudflare-os/workshop-audit/model.mjs
+!examples/cloudflare-os/workshop-audit/gateway.mjs
+!examples/cloudflare-os/workshop-audit/verify.mjs
+!examples/cloudflare-os/workshop-audit/workshop.mjs
