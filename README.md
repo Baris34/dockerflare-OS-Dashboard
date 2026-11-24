@@ -22,6 +22,32 @@ ssh -N -L 4321:127.0.0.1:4320 kullanici@sunucu
 
 Bu örnekte uzak sunucunun paneli kendi bilgisayarında `http://127.0.0.1:4321` adresinde açılır. Yerel servis varsayılan olarak loopback üzerinde dinler. Aynı bilgisayardaki istemciler ayarları değiştirebilir.
 
+## İki PowerShell penceresinde Dockerflare OS loglarını izle
+
+Bu örnekte yerel klonlar `C:\Github\OS-Dashboard` ve `C:\Github\dockerflare-os` altında. Dashboard klasörün `dockerflare-OS-Dashboard` adındaysa ilk `cd` komutlarında o yolu kullan. Her iki süreç de aynı makinede çalışır.
+
+**1. Panel penceresi** — OS Dashboard'u güncelle ve başlat.
+
+```powershell
+cd C:\Github\OS-Dashboard
+git pull --ff-only
+$env:DOCKERFLARE_WORKSHOP_URL = "http://localhost:8787"
+pnpm start
+```
+
+**2. OS penceresi** — Daha önce açtığın `pnpm run-local` sürecini Ctrl+C ile kapat. OS'i aynı portta, Wrangler erişim kayıtlarını okuyacak köprüyle başlat.
+
+```powershell
+cd C:\Github\OS-Dashboard
+$kopru = (Resolve-Path .\scripts\local-os.mjs).Path
+cd ..\dockerflare-os
+pnpm run-local 2>&1 | node $kopru
+```
+
+**3. Kontrol** — OS hazır olduğunda [OS sürüm adresini](http://127.0.0.1:8787/api/version) aç. Birkaç saniye içinde [Log akışında](http://127.0.0.1:4320/#logs) `dockerflare-local.jsonl` kaynağından `GET /api/version | HTTP 200` görünür. Otomatik kontrol için Dashboard klasöründeki boş bir terminalden `pnpm run check:local` çalıştır. Özel port kullanıyorsan kontrolün ilk argümanı panel adresi, ikincisi OS adresidir.
+
+Köprü, ana sayfa, API, gatekeeper, sağlık ve blueprint ekran görüntüsü isteklerinin yöntemini, rota grubunu ve HTTP durumunu kaydeder. Workshop içindeki işlemler WebSocket üzerinden geçer. [Workshop ekranı](http://127.0.0.1:4320/#workshop) sohbet denetimini Dockerflare OS deposundaki `docker/os-dashboard-export` aracılığıyla yerel Wrangler verisinden okur. Özel bir veri dizini kullanıyorsan OS terminalinde `OS_DASHBOARD_WORKSHOP_OBJECTS` değerini `v3/do` dizinine ayarla. Özelleştirdiğin `OS_DASHBOARD_DATA_DIR` ve `OS_DASHBOARD_LOG_DIR` değerlerini iki terminalde de aynı mutlak yollara ayarla. OpenAI veya guard anahtarı gerekmez.
+
 ## Panelde bir işi baştan sona izle
 
 **Workshop** ekranı, Dockerflare sohbetlerini çalışma alanına göre ayırır. Bir sohbeti açtığında başlatan hesabı, model ve araç çağrılarını, onaylayan veya reddeden hesabı ve tahmini toplamı görürsün. Eski kayıtlarda kişi veya fiyat eksikse panel bunu belirtir. [Dört servisin tüm kurulum komutları](SUNUCU-KURULUMU.md) · [Yerel Workshop ekranı](http://127.0.0.1:4321/#workshop)

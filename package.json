@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
+    "check:local": "node scripts/check-local.mjs",
     "test": "node --test"
   }
 }

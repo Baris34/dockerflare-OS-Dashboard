@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { openStore, clean } from "./lib/store.mjs";
 import { sources } from "./lib/sources.mjs";
 import { workshopReader } from "./lib/workshop.mjs";
+import { panelPaths } from "./lib/paths.mjs";
 import { makeAiGateway, readJson, json, validateRoot } from "./lib/ai-gateway.mjs";
 import { readSettings, mergeSettings } from "./lib/settings.mjs";
 import {
@@ -32,15 +33,11 @@ export async function start(options = {}) {
         process.env.OS_DASHBOARD_PUBLIC_AI_GATEWAY_URL ??
         (panelOnly ? "http://localhost:4322/v1" : ""),
     ) || null;
-  const customDir = options.dir || process.env.OS_DASHBOARD_DATA_DIR;
-  const dir = resolve(customDir || join(root, "data", "current"));
-  const logs = resolve(
-    process.env.OS_DASHBOARD_LOG_DIR || join(customDir || join(root, "data"), "logs"),
-  );
+  const { dir, logs, nativeWorkshop } = panelPaths(options.dir);
   await mkdir(dir, { recursive: true });
   await mkdir(logs, { recursive: true });
   const store = openStore(join(dir, "os-dashboard.sqlite"));
-  const workshop = workshopReader(store, options.workshopFile ?? process.env.OS_DASHBOARD_WORKSHOP_DB,
+  const workshop = workshopReader(store, options.workshopFile ?? process.env.OS_DASHBOARD_WORKSHOP_DB ?? nativeWorkshop,
     options.demoDir ?? process.env.OS_DASHBOARD_WORKSHOP_DEMO_DIR);
   const src = sources(store, dir, { logs });
   const getSettings = () => readSettings(store);
