@@ -49,6 +49,6 @@ export function importEvents(file, events) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  if (process.argv[2] === "--check") checkDatabase("/data/seyir.sqlite");
-  else console.log(importEvents("/data/seyir.sqlite", JSON.parse(readFileSync(0, "utf8"))));
+  if (process.argv[2] === "--check") checkDatabase("/data/os-dashboard.sqlite");
+  else console.log(importEvents("/data/os-dashboard.sqlite", JSON.parse(readFileSync(0, "utf8"))));
 }

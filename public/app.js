@@ -40,18 +40,18 @@ const duration = (v) =>
 const pages = {
   overview: ["Genel bakış", "Sistem özeti", "grid"],
   logs: ["Log akışı", "Log akışı", "logs"],
-  gateway: ["AI Gateway", "AI Gateway", "shield"],
+  "ai-gateway": ["AI Gateway", "AI Gateway", "shield"],
   workshop: ["Workshop", "Workshop sohbetleri", "chat"],
   host: ["Sunucu", "Sunucu sağlığı", "server"],
   sources: ["Veri kaynakları", "Veri kaynakları", "plug"],
 };
 const sourceNames = {
-  seyir: "OS Dashboard",
+  "os-dashboard": "OS Dashboard",
   host: "Sunucu",
   files: "Dosya",
   system: "Sistem",
   docker: "Docker",
-  gateway: "Gateway",
+  "ai-gateway": "AI Gateway",
   policy: "Koruma kararları",
   ingest: "Uygulama",
 };
@@ -60,7 +60,7 @@ const sourceIcons = {
   system: "logs",
   files: "folder",
   docker: "box",
-  gateway: "activity",
+  "ai-gateway": "activity",
   ingest: "code",
 };
 const rangeNames = {
@@ -78,7 +78,7 @@ let page = "overview",
   search = "",
   severity = "",
   source = "",
-  gatewayTab = "policy",
+  aiGatewayTab = "policy",
   traceId = "",
   workspaceId = "",
   chatId = "",
@@ -101,7 +101,7 @@ const decisionNames = {
 };
 const stageNames = { input: "Girdi", output: "Çıktı" };
 const defaultGuardModel = "Qwen/Qwen3Guard-Gen-4B";
-const traceHref = (id) => "#gateway?" + new URLSearchParams({ trace: id });
+const traceHref = (id) => "#ai-gateway?" + new URLSearchParams({ trace: id });
 const btn = (action, label, ic = "", cls = "") =>
   `<button class="btn ${cls}" data-a="${action}">${ic ? icon(ic, 15) : ""}${label}</button>`;
 const chip = (text, cls = "") =>
@@ -150,7 +150,7 @@ function toast(text) {
 }
 function nav() {
   for (const [id, keys] of [
-    ["#nav", ["overview", "logs", "gateway", "workshop", "host"]],
+    ["#nav", ["overview", "logs", "ai-gateway", "workshop", "host"]],
     ["#adminNav", ["sources"]],
   ])
     $(id).innerHTML = keys
@@ -188,7 +188,7 @@ function updateHead() {
 function filters() {
   const option = (v, n, selected) =>
     `<option value="${v}" ${v === selected ? "selected" : ""}>${n}</option>`;
-  const isPolicy = page === "gateway" && gatewayTab === "policy";
+  const isPolicy = page === "ai-gateway" && aiGatewayTab === "policy";
   const select = (id, label, entries, selected) =>
     `<select id="${id}" aria-label="${label}">${entries.map(([v, n]) => option(v, n, selected)).join("")}</select>`;
   const common = select("severity", "Olay seviyesi", [
@@ -225,7 +225,7 @@ function kpi(label, value, unit, note, ic, color, action, s = "") {
 }
 function kpis() {
   const { latest: l, stats } = info;
-  return `<div class="kpis">${kpi("CPU kullanımı", num(l?.cpu, 1), "%", info.host.cores + " mantıksal çekirdek", "cpu", "", "host", spark("cpu", "#e78845"))}${kpi("Bellek kullanımı", num(l?.ram, 1), "%", l ? gib(l.used) + " / " + gib(l.total) : "Ölçüm bekleniyor", "ram", "teal", "host", spark("ram", "#35a594"))}${kpi("Toplam olay", num(stats.events), "", stats.errors + " hata kaydı", "logs", "blue", "logs")}${kpi("Model istekleri", num(stats.requests), "", info.settings.upstream ? "Gateway üzerinden" : "Endpoint bekleniyor", "wave", "purple", "traffic")}</div>`;
+  return `<div class="kpis">${kpi("CPU kullanımı", num(l?.cpu, 1), "%", info.host.cores + " mantıksal çekirdek", "cpu", "", "host", spark("cpu", "#e78845"))}${kpi("Bellek kullanımı", num(l?.ram, 1), "%", l ? gib(l.used) + " / " + gib(l.total) : "Ölçüm bekleniyor", "ram", "teal", "host", spark("ram", "#35a594"))}${kpi("Toplam olay", num(stats.events), "", stats.errors + " hata kaydı", "logs", "blue", "logs")}${kpi("Model istekleri", num(stats.requests), "", info.settings.upstream ? "AI Gateway üzerinden" : "Endpoint bekleniyor", "wave", "purple", "traffic")}</div>`;
 }
 function chart() {
   const samples = info.series.filter(
@@ -270,7 +270,7 @@ function chart() {
   return `<section class="chart"><div class="cardHead"><div><div class="eyebrow"><i class="dot orange"></i>SİSTEM TELEMETRİSİ</div><h2>Kaynak kullanımı</h2></div><div class="legend"><span><i></i>CPU</span><span><i></i>RAM</span></div></div><div class="plot" id="plot"><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="CPU ve bellek kullanımı, yüzde"><defs><linearGradient id="grad-cpu" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff9f52" stop-opacity=".23"/><stop offset="1" stop-color="#ff9f52" stop-opacity=".02"/></linearGradient><linearGradient id="grad-ram" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#69c8b8" stop-opacity=".14"/><stop offset="1" stop-color="#69c8b8" stop-opacity=".015"/></linearGradient></defs>${grid}${lines}</svg><span class="plotTip"></span></div><div class="timeaxis">${labels.map((t) => `<span>${time(t, dx < 600000)}</span>`).join("")}</div><div class="chartFoot"><span>${live ? "Otomatik yenileme açık" : "Görünüm duraklatıldı"}</span><span class="axisNote">${samples.length} ölçüm noktası</span></div></section>`;
 }
 function compactSources() {
-  return `<section class="panel sourcesCard"><div class="cardHead"><h2>Veri kaynakları</h2><button class="linkButton" data-a="sources" aria-label="Kaynakları yönet">${icon("filter", 16)}</button></div><div class="sourcesList">${["host", "system", "files", "docker", "gateway"].map((k) => `<div class="srcLine"><span class="sourceName">${icon(sourceIcons[k], 16)}${esc(info.sources[k].name)}</span>${stateChip(info.sources[k].state)}</div>`).join("")}</div></section>`;
+  return `<section class="panel sourcesCard"><div class="cardHead"><h2>Veri kaynakları</h2><button class="linkButton" data-a="sources" aria-label="Kaynakları yönet">${icon("filter", 16)}</button></div><div class="sourcesList">${["host", "system", "files", "docker", "ai-gateway"].map((k) => `<div class="srcLine"><span class="sourceName">${icon(sourceIcons[k], 16)}${esc(info.sources[k].name)}</span>${stateChip(info.sources[k].state)}</div>`).join("")}</div></section>`;
 }
 function pagination() {
   return `<div class="footerRow"><span>${eventPage.total ? num(offset + 1) + "–" + num(Math.min(offset + pageSize, eventPage.total)) + " / " + num(eventPage.total) : "0 kayıt"}</span><div class="toolbar"><button class="btn" data-a="prev" ${offset === 0 ? "disabled" : ""}>Önceki</button><button class="btn" data-a="next" ${offset + pageSize >= eventPage.total ? "disabled" : ""}>Sonraki</button></div></div>`;
@@ -284,10 +284,10 @@ function table(title, compact = false) {
     )
     .join("");
   const message =
-    page === "gateway"
+    page === "ai-gateway"
       ? "Henüz model isteği yok"
       : "Bu aralıkta eşleşen olay yok";
-  return `<section class="panel"><div class="panelHead"><h2>${title} <span class="pillCount">${num(eventPage.total)}</span></h2>${compact ? `<button class="linkButton" data-a="logs">Tüm loglar ${icon("chevron", 13)}</button>` : ""}</div>${rows ? `<div class="tableWrap"><table class="eventTable"><thead><tr><th class="colTime">ZAMAN</th><th class="colLevel">SEVİYE</th><th class="colSource">SERVİS</th><th>OLAY</th><th class="colGo"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${icon(page === "gateway" ? "activity" : "search", 24)}<strong>${message}</strong>${page === "gateway" ? "İstemcini OS Dashboard gateway adresine bağladığında çağrılar burada görünür." : "Zaman aralığını veya filtreleri değiştirebilirsin."}</div>`}${compact ? "" : pagination()}</section>`;
+  return `<section class="panel"><div class="panelHead"><h2>${title} <span class="pillCount">${num(eventPage.total)}</span></h2>${compact ? `<button class="linkButton" data-a="logs">Tüm loglar ${icon("chevron", 13)}</button>` : ""}</div>${rows ? `<div class="tableWrap"><table class="eventTable"><thead><tr><th class="colTime">ZAMAN</th><th class="colLevel">SEVİYE</th><th class="colSource">SERVİS</th><th>OLAY</th><th class="colGo"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${icon(page === "ai-gateway" ? "activity" : "search", 24)}<strong>${message}</strong>${page === "ai-gateway" ? "İstemcini OS Dashboard AI Gateway adresine bağladığında çağrılar burada görünür." : "Zaman aralığını veya filtreleri değiştirebilirsin."}</div>`}${compact ? "" : pagination()}</section>`;
 }
 function tiles() {
   const h = info.host;
@@ -296,10 +296,10 @@ function tiles() {
     system: info.sources.system.note,
     files: h.logsDir,
     docker: info.sources.docker.note,
-    gateway: info.sources.gateway.note,
+    "ai-gateway": info.sources["ai-gateway"].note,
     ingest: "POST /api/events",
   };
-  return `<div class="tileGrid">${["host", "system", "files", "docker", "gateway", "ingest"].map((k) => `<section class="tile panel"><div class="cardHead"><div class="tileIcon">${icon(sourceIcons[k])}</div>${stateChip(info.sources[k]?.state || "ready")}</div><h2>${esc(info.sources[k]?.name || "Uygulama olayları")}</h2><p style="overflow-wrap:anywhere">${esc(details[k])}</p>${btn("detail-" + k, k === "gateway" ? "Bağlantıyı düzenle" : "Ayrıntıları aç", k === "gateway" ? "plug" : "layers")}</section>`).join("")}</div>`;
+  return `<div class="tileGrid">${["host", "system", "files", "docker", "ai-gateway", "ingest"].map((k) => `<section class="tile panel"><div class="cardHead"><div class="tileIcon">${icon(sourceIcons[k])}</div>${stateChip(info.sources[k]?.state || "ready")}</div><h2>${esc(info.sources[k]?.name || "Uygulama olayları")}</h2><p style="overflow-wrap:anywhere">${esc(details[k])}</p>${btn("detail-" + k, k === "ai-gateway" ? "Bağlantıyı düzenle" : "Ayrıntıları aç", k === "ai-gateway" ? "plug" : "layers")}</section>`).join("")}</div>`;
 }
 function reading(label, value, small = false) {
   return `<div class="readout panel"><small>${label}</small><strong ${small ? 'class="smallVal"' : ""}>${esc(value)}</strong></div>`;
@@ -336,7 +336,7 @@ function money(value) {
 }
 function trafficView() {
   const s = info.stats;
-  return `<div class="statusPanel panel"><div><strong>${info.settings.upstream ? "Model gateway yapılandırıldı" : "Model endpoint’i bağla"}</strong><p>${info.publicGatewayUrl ? "İstemci API kökü <code>" + esc(info.publicGatewayUrl) + "</code>" : info.settings.upstream ? esc(info.settings.upstream) : "OpenAI veya OpenAI uyumlu sunucun üzerinden geçen çağrıları izle."}</p></div><div class="toolbar">${btn("prices", "Tarifeler")}${btn("config", "Bağlantı ayarları", "plug", "primary")}</div></div><div class="machine">${reading("İstek", num(s.requests))}${reading("Giriş tokenı", num(s.input_tokens))}${reading("Çıkış tokenı", num(s.output_tokens))}${reading("Ortalama süre", s.latency == null ? "—" : num(s.latency) + " ms")}${reading("Tahmini maliyet", money(s.cost_usd))}${reading("Fiyatlanan istek", num(s.priced) + " / " + num(s.requests))}</div><div class="blockGap">${filters()}${table("Model çağrıları")}</div>`;
+  return `<div class="statusPanel panel"><div><strong>${info.settings.upstream ? "AI Gateway yapılandırıldı" : "Model endpoint’i bağla"}</strong><p>${info.publicAiGatewayUrl ? "İstemci API kökü <code>" + esc(info.publicAiGatewayUrl) + "</code>" : info.settings.upstream ? esc(info.settings.upstream) : "OpenAI veya OpenAI uyumlu sunucun üzerinden geçen çağrıları izle."}</p></div><div class="toolbar">${btn("prices", "Tarifeler")}${btn("config", "Bağlantı ayarları", "plug", "primary")}</div></div><div class="machine">${reading("İstek", num(s.requests))}${reading("Giriş tokenı", num(s.input_tokens))}${reading("Çıkış tokenı", num(s.output_tokens))}${reading("Ortalama süre", s.latency == null ? "—" : num(s.latency) + " ms")}${reading("Tahmini maliyet", money(s.cost_usd))}${reading("Fiyatlanan istek", num(s.priced) + " / " + num(s.requests))}</div><div class="blockGap">${filters()}${table("Model çağrıları")}</div>`;
 }
 function policyBadge(kind) {
   const [label, color] = Object.hasOwn(decisionNames, kind)
@@ -385,25 +385,25 @@ function traceView() {
     const timestamp = new Date(e.ts).toLocaleTimeString("tr-TR", {
       hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3,
     });
-    const outcome = e.source === "gateway" && e.status != null
+    const outcome = e.source === "ai-gateway" && e.status != null
       ? chip("HTTP " + e.status, e.status < 400 ? "green" : "red")
       : isPolicy ? policyBadge(e.kind) : levelChip(e.level);
     return `<tr tabindex="0" data-event="${esc(e.id)}" aria-label="${esc(e.message)}"><td class="time">${timestamp}</td><td>${outcome}</td><td class="service">${esc(e.service)}</td><td class="ruleCell"><span>${isPolicy ? esc((stageNames[e.operation] || e.operation || "Denetim") + " · " + (e.detail || e.message)) : esc(e.message)}</span></td><td class="colGo">${icon("chevron", 13)}</td></tr>`;
   }).join("");
-  return `<a class="traceBack" href="#gateway">${icon("chevron", 14)} Karar günlüğü</a><section class="panel tracePanel">
+  return `<a class="traceBack" href="#ai-gateway">${icon("chevron", 14)} Karar günlüğü</a><section class="panel tracePanel">
     <div class="panelHead"><div><h2>İstek izi</h2><code class="traceId">${esc(traceId)}</code></div></div>
-    ${trace ? `<div class="traceSummary">${num(trace.events)} olay <span>·</span> ${num(trace.requests)} gateway isteği <span>·</span> Ana model çağrısı ${num(trace.upstream_calls)} <span>·</span> Tahmini maliyet ${money(trace.cost_usd)}</div>` : ""}
+    ${trace ? `<div class="traceSummary">${num(trace.events)} olay <span>·</span> ${num(trace.requests)} AI Gateway isteği <span>·</span> Ana model çağrısı ${num(trace.upstream_calls)} <span>·</span> Tahmini maliyet ${money(trace.cost_usd)}</div>` : ""}
     ${rows ? `<div class="tableWrap"><table class="eventTable traceTable"><thead><tr><th class="colTime">ZAMAN</th><th class="decisionCol">SONUÇ</th><th class="engineCol">SERVİS</th><th>OLAY</th><th class="colGo"></th></tr></thead><tbody>${rows}</tbody></table></div>`
     : `<div class="empty">${icon("search", 24)}<strong>Bu iz kimliğiyle kayıt bulunamadı</strong></div>`}
     ${pagination()}</section>`;
 }
-function gatewayView() {
+function aiGatewayView() {
   if (traceId) return traceView();
-  const tabs = [["policy", "#gateway", "Koruma kararları", "shield"], ["traffic", "#gateway?view=traffic", "Model trafiği", "activity"]];
-  return `<div class="gatewayNav"><nav aria-label="Gateway görünümleri">${tabs.map(([view, href, label, symbol]) =>
-    `<a href="${href}" ${gatewayTab === view ? 'aria-current="page"' : ""}>${icon(symbol, 16)}${label}</a>`).join("")}</nav>
-    ${gatewayTab === "policy" ? btn("policy-config", "Koruma ayarları", "filter") : ""}</div>
-    ${gatewayTab === "policy" ? policyView() : trafficView()}`;
+  const tabs = [["policy", "#ai-gateway", "Koruma kararları", "shield"], ["traffic", "#ai-gateway?view=traffic", "Model trafiği", "activity"]];
+  return `<div class="aiGatewayNav"><nav aria-label="AI Gateway görünümleri">${tabs.map(([view, href, label, symbol]) =>
+    `<a href="${href}" ${aiGatewayTab === view ? 'aria-current="page"' : ""}>${icon(symbol, 16)}${label}</a>`).join("")}</nav>
+    ${aiGatewayTab === "policy" ? btn("policy-config", "Koruma ayarları", "filter") : ""}</div>
+    ${aiGatewayTab === "policy" ? policyView() : trafficView()}`;
 }
 function workshopHref(start = 0, workspace, chat) {
   const query = new URLSearchParams();
@@ -560,7 +560,7 @@ function render() {
     overview: () =>
       `${kpis()}<div class="overviewGrid">${chart()}${compactSources()}</div>${table("Son olaylar", true)}`,
     logs: () => filters() + table("Olaylar"),
-    gateway: gatewayView,
+    "ai-gateway": aiGatewayView,
     workshop: workshopView,
     host: hostView,
     sources: tiles,
@@ -608,23 +608,23 @@ async function refresh() {
       limit: p === "overview" ? 7 : pageSize,
       offset: p === "overview" ? 0 : offset,
     });
-    if (p === "gateway" && traceId) {
+    if (p === "ai-gateway" && traceId) {
       params.delete("since");
       params.set("trace_id", traceId);
       params.set("order", "asc");
-    } else if (p === "gateway") {
-      params.set("source", gatewayTab === "policy" ? "policy" : "gateway");
-      if (gatewayTab === "policy" && decision) params.set("kind", decision);
-      if (gatewayTab === "policy" && stage) params.set("operation", stage);
+    } else if (p === "ai-gateway") {
+      params.set("source", aiGatewayTab === "policy" ? "policy" : "ai-gateway");
+      if (aiGatewayTab === "policy" && decision) params.set("kind", decision);
+      if (aiGatewayTab === "policy" && stage) params.set("operation", stage);
     }
     if (p === "logs" && source) params.set("source", source);
-    if (p === "logs" || p === "gateway") {
+    if (p === "logs" || p === "ai-gateway") {
       if (search) params.set("q", search);
       if (severity) params.set("level", severity);
     }
     const [snapshot, events, workshop] = await Promise.all([
       api("/api/overview?range=" + range),
-      ["overview", "logs", "gateway"].includes(p)
+      ["overview", "logs", "ai-gateway"].includes(p)
         ? api("/api/events?" + params)
         : Promise.resolve({ items: [], total: 0 }),
       p === "workshop" ? loadWorkshop() : null,
@@ -650,10 +650,12 @@ async function refresh() {
   }
 }
 function navigate() {
+  if (/^#gateway(?:\?|$)/.test(location.hash))
+    history.replaceState(null, "", location.hash.replace(/^#gateway/, "#ai-gateway"));
   const [target, query] = location.hash.slice(1).split("?", 2);
   const route = new URLSearchParams(query);
-  gatewayTab = route.get("view") === "traffic" ? "traffic" : "policy";
-  traceId = target === "gateway" ? route.get("trace") || "" : "";
+  aiGatewayTab = route.get("view") === "traffic" ? "traffic" : "policy";
+  traceId = target === "ai-gateway" ? route.get("trace") || "" : "";
   workspaceId = target === "workshop" ? route.get("workspace_id") || "" : "";
   chatId = target === "workshop" ? route.get("chat_id") || "" : "";
   workshopResult = null;
@@ -688,8 +690,8 @@ function dialog(label, body) {
 function configDialog() {
   const cfg = info.settings;
   dialog(
-    "MODEL GATEWAY",
-    `<h2>Bağlantı ayarları</h2><p class="copyText">Model istemcinin API kökünü <code>${esc(info.publicGatewayUrl || location.origin + "/v1")}</code> olarak ayarla. OS Dashboard çağrıları aşağıdaki sağlayıcıya iletir.</p><form id="configForm"><label class="formField">Sağlayıcının API kökü<input id="endpoint" type="url" placeholder="https://api.openai.com/v1" value="${esc(cfg.upstream)}"></label><div class="copyText">Anahtar gerektiren sağlayıcılar için servis ortamında <code>SEYIR_UPSTREAM_KEY</code> kullanılır. ${info.keyReady === null ? "Sağlayıcı anahtarı gateway sürecinde yönetilir." : info.keyReady ? "Kayıtlı adres için sağlayıcı anahtarı tanımlı." : "Kayıtlı adres için sağlayıcı anahtarı tanımlı değil."}</div><label class="formField">Dakikalık istek sınırı<input id="rateLimit" type="number" min="0" max="100000" value="${cfg.rate}" required></label><small class="muted">0 sınırı kapatır. Tüm istemciler aynı pencereyi paylaşır.</small><div class="actions">${btn("cancel", "İptal")}<button class="btn primary" type="submit">Kaydet</button></div><div id="cfgErr" role="alert"></div></form>`,
+    "AI GATEWAY",
+    `<h2>Bağlantı ayarları</h2><p class="copyText">Model istemcinin API kökünü <code>${esc(info.publicAiGatewayUrl || location.origin + "/v1")}</code> olarak ayarla. OS Dashboard çağrıları aşağıdaki sağlayıcıya iletir.</p><form id="configForm"><label class="formField">Sağlayıcının API kökü<input id="endpoint" type="url" placeholder="https://api.openai.com/v1" value="${esc(cfg.upstream)}"></label><div class="copyText">Anahtar gerektiren sağlayıcılar için servis ortamında <code>OS_DASHBOARD_UPSTREAM_KEY</code> kullanılır. ${info.keyReady === null ? "Sağlayıcı anahtarı AI Gateway sürecinde yönetilir." : info.keyReady ? "Kayıtlı adres için sağlayıcı anahtarı tanımlı." : "Kayıtlı adres için sağlayıcı anahtarı tanımlı değil."}</div><label class="formField">Dakikalık istek sınırı<input id="rateLimit" type="number" min="0" max="100000" value="${cfg.rate}" required></label><small class="muted">0 sınırı kapatır. Tüm istemciler aynı pencereyi paylaşır.</small><div class="actions">${btn("cancel", "İptal")}<button class="btn primary" type="submit">Kaydet</button></div><div id="cfgErr" role="alert"></div></form>`,
   );
   $("#configForm").onsubmit = async (e) => {
     e.preventDefault();
@@ -704,7 +706,7 @@ function configDialog() {
       });
       $("#drawer").close();
       await refresh();
-      toast("Gateway ayarları kaydedildi.");
+      toast("AI Gateway ayarları kaydedildi.");
     } catch (err) {
       $("#cfgErr").textContent = err.message;
     }
@@ -731,7 +733,7 @@ async function policyDialog() {
       <label class="formField">Model kimliği<input name="guardModel" maxlength="140" value="${esc(cfg.guardModel || defaultGuardModel)}" placeholder="${defaultGuardModel}"></label>
       <label class="formField">Model Unsafe kararı verdiğinde<select name="guardAction"><option value="block" ${cfg.guardAction !== "flag" ? "selected" : ""}>Engelle</option><option value="flag" ${cfg.guardAction === "flag" ? "selected" : ""}>İşaretle ve geçir</option></select></label>
       <p class="fieldHelp">Controversial kararında içerik işaretlenerek geçer.</p>
-      <p class="fieldHelp">${info.guardKeyReady === null ? "Guard anahtarı gateway sürecinde yönetilir." : info.guardKeyReady ? "Kayıtlı adres için Guard anahtarı tanımlı." : "Kayıtlı adres için Guard anahtarı tanımlı değil."}</p>
+      <p class="fieldHelp">${info.guardKeyReady === null ? "Guard anahtarı AI Gateway sürecinde yönetilir." : info.guardKeyReady ? "Kayıtlı adres için Guard anahtarı tanımlı." : "Kayıtlı adres için Guard anahtarı tanımlı değil."}</p>
     </section>
     <div class="actions"><button type="button" class="btn" data-a="cancel">İptal</button><button class="btn primary" type="submit">Kaydet</button></div>
     <p id="policyError" role="alert"></p></form>`);
@@ -762,7 +764,7 @@ async function policyDialog() {
   };
 }
 function sourceDialog(k) {
-  if (k === "gateway") {
+  if (k === "ai-gateway") {
     configDialog();
     return;
   }
@@ -770,7 +772,7 @@ function sourceDialog(k) {
   const contents = {
     host: `CPU ve RAM yaklaşık 2,5 saniyede bir örneklenir. Disk oranı OS Dashboard veri dizininin bulunduğu birime aittir.`,
     system: `Windows’ta Application ve System kanallarının son altı saatinden erişilebilen kayıtlar alınır. Linux’ta journalctl kullanılır.`,
-    files: `Bu dizine .log, .jsonl veya .ndjson dosyası ekle. Yeni satırlar otomatik okunur. Konumu SEYIR_LOG_DIR ile değiştirebilirsin.`,
+    files: `Bu dizine .log, .jsonl veya .ndjson dosyası ekle. Yeni satırlar otomatik okunur. Konumu OS_DASHBOARD_LOG_DIR ile değiştirebilirsin.`,
     docker: `OS Dashboard, çalışan Docker motorunu CLI üzerinden okur. Görünecek konteynerlerin daemon’u ile aynı Docker bağlamını kullanmalı.`,
     ingest: `Bir uygulama yerel API’ye service, level ve message gönderebilir. Aynı trace_id taşıyan olaylar ayrıntı ekranında birlikte açılır.`,
   };
@@ -816,7 +818,7 @@ async function eventDetail(id) {
       ["HTTP", row.status],
       ["Süre", row.duration == null ? "" : num(row.duration) + " ms"],
       ["İstenen model", row.model],
-      ["Ana model çağrısı", row.source === "gateway" ? (row.upstream_called == null ? "Ölçülmedi" : row.upstream_called ? "Yapıldı" : "Yapılmadı") : ""],
+      ["Ana model çağrısı", row.source === "ai-gateway" ? (row.upstream_called == null ? "Ölçülmedi" : row.upstream_called ? "Yapıldı" : "Yapılmadı") : ""],
       ["Çalışan model", row.served_model],
       ["Giriş tokenı", row.input_tokens],
       ["Çıkış tokenı", row.output_tokens],
@@ -837,7 +839,7 @@ async function eventDetail(id) {
       const { trace, items } = result;
       dest.innerHTML = `<h3 class="sectionTitle">Aynı izdeki olaylar (${num(trace.events)})</h3>
         ${keyVal([
-          ["Gateway isteği", trace.requests],
+          ["AI Gateway isteği", trace.requests],
           ["Ana model çağrısı", num(trace.upstream_calls)],
           ["Tarifesi hesaplanan çağrı", trace.priced],
           ["Hesaplanan toplam", money(trace.cost_usd)],
@@ -915,7 +917,7 @@ document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-a]")?.dataset.a;
   if (!a) return;
   if (Object.hasOwn(pages, a)) gotoPage(a);
-  else if (a === "traffic") gotoPage("gateway?view=traffic");
+  else if (a === "traffic") gotoPage("ai-gateway?view=traffic");
   else if (a === "policy-config") policyDialog();
   else if (a === "refresh") refresh();
   else if (a === "live") {
@@ -962,7 +964,7 @@ function pricesDialog() {
         "",
       )}</div><button class="linkButton removePrice" type="button">Tarifeyi kaldır</button></fieldset>`;
   dialog(
-    "MODEL GATEWAY",
+    "AI GATEWAY",
     `<h2>Model tarifeleri</h2><p class="copyText">Bir milyon token başına USD fiyatlarını gir. OS Dashboard tamamlanan çağrıda geçerli tarifeyi saklar. Tarifesi olmayan modelin bedeli belirsiz görünür.</p><form id="pricesForm"><div id="priceRows">${prices.map(row).join("")}</div><button type="button" id="addPrice" class="btn">Tarife ekle</button><div class="actions"><button type="button" class="btn" data-a="cancel">İptal</button><button class="btn primary">Kaydet</button></div><p id="priceError" role="alert"></p></form>`,
   );
   $("#addPrice").onclick = () =>

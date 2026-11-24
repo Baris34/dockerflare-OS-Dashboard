@@ -13,7 +13,7 @@ assert.equal(chats.connected, true, "Workshop sohbet kaynağı bağlı değil.")
 const overview = await (await get(panel, "/api/overview")).json();
 assert.ok(overview.workshopUrl, "DOCKERFLARE_WORKSHOP_URL ayarlanmalı.");
 const response = await get(web, "/api/version");
-const trace = response.headers.get("x-seyir-trace");
+const trace = response.headers.get("x-os-dashboard-trace");
 assert.match(trace || "", /^[a-f0-9]{32}$/, "Dockerflare Web iz kimliği döndürmedi.");
 for (let attempt = 0; ; attempt++) {
   const events = await (await get(panel, "/api/events?trace_id=" + trace)).json();
@@ -22,4 +22,4 @@ for (let attempt = 0; ; attempt++) {
   await delay(1000);
 }
 console.log("Workshop kaynağı bağlı. Dockerflare Web isteği OS Dashboard’da doğrulandı.");
-console.log(new URL("/#gateway?trace=" + trace, panel).href);
+console.log(new URL("/#ai-gateway?trace=" + trace, panel).href);

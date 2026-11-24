@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { makeGateway } from "../lib/gateway.mjs";
+import { makeAiGateway } from "../lib/ai-gateway.mjs";
 
 async function listen(t, handler) {
   const server = http.createServer(handler);
@@ -50,7 +50,7 @@ async function setup(t) {
       upstreamCalls.push(await body(req));
       service.respond(res);
     })) + "/v1";
-  const proxy = makeGateway(
+  const proxy = makeAiGateway(
     {
       record(e) {
         records.push(e);
@@ -64,7 +64,7 @@ async function setup(t) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-seyir-trace": "case-1",
+        "x-os-dashboard-trace": "case-1",
       },
       body: JSON.stringify(data),
     });
@@ -224,19 +224,19 @@ test("Responses output and tool inputs use assistant and user guard modes, contr
 test("guard keys are scoped to their exact origin and input rate limits precede guard calls", async (t) => {
   const { cfg, post, guardCalls, upstreamCalls, service } = await setup(t);
   const saved = {
-    key: process.env.SEYIR_GUARD_KEY,
-    origin: process.env.SEYIR_GUARD_KEY_ORIGIN,
+    key: process.env.OS_DASHBOARD_GUARD_KEY,
+    origin: process.env.OS_DASHBOARD_GUARD_KEY_ORIGIN,
   };
   t.after(() => {
     for (const [name, value] of [
-      ["SEYIR_GUARD_KEY", saved.key],
-      ["SEYIR_GUARD_KEY_ORIGIN", saved.origin],
+      ["OS_DASHBOARD_GUARD_KEY", saved.key],
+      ["OS_DASHBOARD_GUARD_KEY_ORIGIN", saved.origin],
     ])
       if (value === undefined) delete process.env[name];
       else process.env[name] = value;
   });
-  process.env.SEYIR_GUARD_KEY = "local-fixture-only";
-  process.env.SEYIR_GUARD_KEY_ORIGIN = "https://different.invalid";
+  process.env.OS_DASHBOARD_GUARD_KEY = "local-fixture-only";
+  process.env.OS_DASHBOARD_GUARD_KEY_ORIGIN = "https://different.invalid";
   cfg.guardAction = "flag";
   cfg.rate = 2;
   service.classify = (last) =>
@@ -244,7 +244,7 @@ test("guard keys are scoped to their exact origin and input rate limits precede 
     (last.role === "assistant" ? "\nRefusal: No" : "");
   assert.equal((await post(chat("first"))).status, 200);
   assert.equal(guardCalls[0].headers.authorization, undefined);
-  process.env.SEYIR_GUARD_KEY_ORIGIN = new URL(cfg.guardRoot).origin;
+  process.env.OS_DASHBOARD_GUARD_KEY_ORIGIN = new URL(cfg.guardRoot).origin;
   assert.equal((await post(chat("second"))).status, 200);
   assert.equal(
     guardCalls[2].headers.authorization,
@@ -301,7 +301,7 @@ test("Responses SSE reconstructs deltas even when the final snapshot is differen
   );
   assert.equal(response.status, 424);
   assert.doesNotMatch(await response.text(), /4111|data:/);
-  const parent = records.find((e) => e.source === "gateway");
+  const parent = records.find((e) => e.source === "ai-gateway");
   assert.equal(parent.upstream_called, 1);
   assert.equal(parent.output_tokens, 9);
   assert.equal(parent.served_model, "provider");

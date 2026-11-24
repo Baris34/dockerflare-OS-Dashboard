@@ -5,7 +5,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { webSocketConnection } from "/src/packages/api-cli/src/session.ts";
 
 const origin = "http://web:8080";
-const modelRoot = "http://gateway:8000/v1";
+const modelRoot = "http://ai-gateway:8000/v1";
 for (let attempt = 0; ; attempt++) {
   let ready = false;
   try {
@@ -19,7 +19,7 @@ for (let attempt = 0; ; attempt++) {
 
 using session = webSocketConnection("ws://web:8080/api", { Origin: origin }).main;
 // This one-use private deployment only needs an unpredictable 32-byte verifier.
-const token = await session.createAccount("seyirdemo", "OS Dashboard demo", randomBytes(32));
+const token = await session.createAccount("dashboarddemo", "OS Dashboard demo", randomBytes(32));
 using api = await session.authenticate(token);
 assert.equal(await api.amIAdmin(), true);
 using ws = await api.newWorkspace();

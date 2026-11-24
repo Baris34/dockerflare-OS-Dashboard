@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { webSocketConnection } from "/src/packages/api-cli/src/session.ts";
 
-const origin = "http://web:8080", user = "auditdemo", model = "seyir-audit-demo";
+const origin = "http://web:8080", user = "auditdemo", model = "os-dashboard-audit-demo";
 const reviewer = "auditreview";
 for (let attempt = 0; ; attempt++) {
   try {
@@ -18,7 +18,7 @@ using session = webSocketConnection("ws://web:8080/api", { Origin:origin }).main
 using api = await session.authenticate(await session.createAccount(user, "Audit demo", randomBytes(32)));
 assert.equal(await api.amIAdmin(), true);
 await api.addModel({type:"agent",id:model,name:model},{
-  provider:"openai-compatible", model, apiUrl:"http://gateway:4322/v1", apiToken:readFileSync("/auth/token","utf8"),
+  provider:"openai-compatible", model, apiUrl:"http://ai-gateway:4322/v1", apiToken:readFileSync("/auth/token","utf8"),
 });
 using ws = await api.newWorkspace();
 const workspace = (await ws.getMetadata()).id;

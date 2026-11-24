@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { start } from "../server.mjs";
 
 test("Responses and SSE retain actual model, logical source and historical tariff", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-responses-"));
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-responses-"));
   const usage = {
     input_tokens: 1000,
     output_tokens: 500,
@@ -58,7 +58,7 @@ test("Responses and SSE retain actual model, logical source and historical tarif
     const res = await post(
       "/v1/responses",
       { model: "alias", input: "private fixture", stream },
-      { "x-seyir-trace": "conversation-one", "x-seyir-source": "thread-title" },
+      { "x-os-dashboard-trace": "conversation-one", "x-os-dashboard-source": "thread-title" },
     );
     assert.equal(res.status, 200);
     await res.text();
@@ -74,7 +74,7 @@ test("Responses and SSE retain actual model, logical source and historical tarif
   });
   const timeline = await (
     await fetch(
-      app.url + "/api/events?trace_id=conversation-one&source=gateway&limit=1",
+      app.url + "/api/events?trace_id=conversation-one&source=ai-gateway&limit=1",
     )
   ).json();
   assert.equal(timeline.trace.events, 3);
@@ -84,7 +84,7 @@ test("Responses and SSE retain actual model, logical source and historical tarif
   const rows = (
     await (
       await fetch(
-        app.url + "/api/events?trace_id=conversation-one&source=gateway",
+        app.url + "/api/events?trace_id=conversation-one&source=ai-gateway",
       )
     ).json()
   ).items;

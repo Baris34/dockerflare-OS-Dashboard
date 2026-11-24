@@ -9,8 +9,8 @@ import http from "node:http";
 import { start } from "../server.mjs";
 
 const workspace = "a".repeat(64);
-test("chat audit uses exact gateway response IDs, bills every guard call, and preserves unknown historical prices", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-chat-"));
+test("chat audit uses exact AI Gateway response IDs, bills every guard call, and preserves unknown historical prices", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-chat-"));
   const file = join(dir, "projection.sqlite");
   const db = new DatabaseSync(file);
   t.after(() => db.close());
@@ -71,7 +71,7 @@ test("chat audit uses exact gateway response IDs, bills every guard call, and pr
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-seyir-accounting": "workshop",
+      "x-os-dashboard-accounting": "workshop",
     },
     body: JSON.stringify({
       model: "main",
@@ -80,7 +80,7 @@ test("chat audit uses exact gateway response IDs, bills every guard call, and pr
   });
   assert.equal(reply.status, 200);
   await reply.text();
-  const request = reply.headers.get("x-seyir-request-id");
+  const request = reply.headers.get("x-os-dashboard-request-id");
   assert.ok(request);
   const add = db.prepare(
     "INSERT INTO chat_event(workspace_id,chat_id,event_id,type,ts,name,actor,status,request_id,private_message) VALUES(?,0,?,?,1,?,?,?,?,?)",

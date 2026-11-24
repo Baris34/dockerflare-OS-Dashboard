@@ -1260,9 +1260,9 @@ dialog::backdrop {
   }
 }
 
-.gatewayNav,
-.gatewayNav nav,
-.gatewayNav a,
+.aiGatewayNav,
+.aiGatewayNav nav,
+.aiGatewayNav a,
 .statusHeading,
 .policyState,
 .policyStats dt,
@@ -1270,20 +1270,20 @@ dialog::backdrop {
   display: flex;
   align-items: center;
 }
-.gatewayNav {
+.aiGatewayNav {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.gatewayNav nav {
+.aiGatewayNav nav {
   padding: 3px;
   gap: 2px;
   border-radius: 9px;
   background: #e9ecef;
   border: 1px solid #e0e3e6;
 }
-.gatewayNav a {
+.aiGatewayNav a {
   gap: 7px;
   padding: 8px 12px;
   border: 1px solid transparent;
@@ -1293,7 +1293,7 @@ dialog::backdrop {
   font-size: 13px;
   font-weight: 580;
 }
-.gatewayNav a[aria-current] {
+.aiGatewayNav a[aria-current] {
   color: #232b32;
   border-color: #d9dde1;
   background: #fff;

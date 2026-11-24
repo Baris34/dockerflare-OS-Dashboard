@@ -1,11 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { writeFileSync } from "node:fs";
-import { makeGateway } from "/app/lib/gateway.mjs";
+import { makeAiGateway } from "/app/lib/ai-gateway.mjs";
 import { createInferenceListener } from "/app/lib/inference-listener.mjs";
 import { openStore } from "/app/lib/store.mjs";
 
-const store = openStore("/data/seyir.sqlite");
-const proxy = makeGateway(store, () => ({
+const store = openStore("/data/os-dashboard.sqlite");
+const proxy = makeAiGateway(store, () => ({
   upstream: "http://model:8000/v1",
   guardRoot: "http://guard:8000/v1",
   guardModel: "fixture-guard",

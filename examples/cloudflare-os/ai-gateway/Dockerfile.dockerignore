@@ -1,9 +1,9 @@
 **
-!lib/gateway.mjs
+!lib/ai-gateway.mjs
 !lib/inference-listener.mjs
 !lib/policy.mjs
 !lib/store.mjs
-!examples/cloudflare-os/ai-gateway/gateway.mjs
+!examples/cloudflare-os/ai-gateway/ai-gateway.mjs
 !examples/cloudflare-os/ai-gateway/capture.mjs
 !examples/cloudflare-os/ai-gateway/import-events.mjs
 !examples/cloudflare-os/ai-gateway/fixture.mjs

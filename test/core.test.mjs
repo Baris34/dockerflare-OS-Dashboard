@@ -6,7 +6,7 @@ import { join } from "node:path";
 import http from "node:http";
 
 test("OS Dashboard records usage, streamed usage, policy blocks and searchable file logs across restarts", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-test-"));
   const messages = [];
   const upstream = http.createServer(async (req, res) => {
     let raw = "";
@@ -55,7 +55,7 @@ test("OS Dashboard records usage, streamed usage, policy blocks and searchable f
         messages: [{ role: "user", content: message }],
         stream,
       },
-      { "x-seyir-trace": "test-turn" },
+      { "x-os-dashboard-trace": "test-turn" },
     );
   assert.equal((await ask("no upstream yet")).status, 503);
   const base = "http://127.0.0.1:" + upstream.address().port + "/v1";
@@ -83,7 +83,7 @@ test("OS Dashboard records usage, streamed usage, policy blocks and searchable f
   assert.equal((await ask("synthetic 4111 1111 1111 1111")).status, 424);
   assert.equal(messages.length, 2);
   const json = (path) => fetch(app.url + path).then((r) => r.json());
-  let list = (await json("/api/events?source=gateway")).items;
+  let list = (await json("/api/events?source=ai-gateway")).items;
   assert.equal(list.length, 4);
   assert.equal(
     list.filter((e) => e.trace_id === "test-turn" && e.level === "info").length,

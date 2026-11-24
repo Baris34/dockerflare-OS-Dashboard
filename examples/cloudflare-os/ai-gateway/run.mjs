@@ -10,11 +10,11 @@ const root = fileURLToPath(new URL("../../../", import.meta.url));
 const options = process.argv.slice(2);
 if (options.length > 1 || (options.length && options[0] !== "--import"))
   throw new Error("Kullanım: node run.mjs [--import]");
-const dbFile = join(resolve(process.env.SEYIR_DATA_DIR || join(root, "data", "current")), "seyir.sqlite");
-const importVolume = process.env.SEYIR_IMPORT_VOLUME || "";
-const prefix = "seyir-workshop-" + randomUUID();
+const dbFile = join(resolve(process.env.OS_DASHBOARD_DATA_DIR || join(root, "data", "current")), "os-dashboard.sqlite");
+const importVolume = process.env.OS_DASHBOARD_IMPORT_VOLUME || "";
+const prefix = "os-dashboard-workshop-" + randomUUID();
 const name = (suffix) => prefix + "-" + suffix;
-const label = "seyir.demo.run=" + prefix;
+const label = "os-dashboard.demo.run=" + prefix;
 function docker(args, input) {
   const windows = process.platform === "win32";
   return execFileSync(windows ? "wsl.exe" : "docker",
@@ -34,34 +34,34 @@ const stages = [
   ["DLP · Dockerflare örneği", "output"], ["Guard test servisi", "output"],
 ];
 function verify(chats, { events, model, guard }) {
-  const gateways = events.filter(e => e.source === "gateway");
-  assert.equal(events.length, 5 * gateways.length);
+  const aiGatewayEvents = events.filter(e => e.source === "ai-gateway");
+  assert.equal(events.length, 5 * aiGatewayEvents.length);
   assert.deepEqual(chats.map(row => row.model), Object.keys(expected));
-  assert.deepEqual([...new Set(gateways.map(e => e.model))].sort(), Object.keys(expected).sort());
-  assert.equal(new Set(gateways.map(e => e.request_id)).size, gateways.length);
-  assert.equal(new Set(gateways.map(e => e.trace_id)).size, gateways.length);
-  const report = gateways.map(gateway => {
-    const { decisions, status } = expected[gateway.model];
-    assert.equal(gateway.service, "Dockerflare örneği");
-    assert.equal(gateway.status, status, gateway.model + " HTTP");
-    assert.equal(gateway.upstream_called, Number(["demo-pass","demo-guard-out"].includes(gateway.model)));
-    assert.match(gateway.trace_id, /^[a-f\d-]{36}$/);
-    assert.match(gateway.request_id, /^[a-f\d-]{36}$/);
+  assert.deepEqual([...new Set(aiGatewayEvents.map(e => e.model))].sort(), Object.keys(expected).sort());
+  assert.equal(new Set(aiGatewayEvents.map(e => e.request_id)).size, aiGatewayEvents.length);
+  assert.equal(new Set(aiGatewayEvents.map(e => e.trace_id)).size, aiGatewayEvents.length);
+  const report = aiGatewayEvents.map(aiGateway => {
+    const { decisions, status } = expected[aiGateway.model];
+    assert.equal(aiGateway.service, "Dockerflare örneği");
+    assert.equal(aiGateway.status, status, aiGateway.model + " HTTP");
+    assert.equal(aiGateway.upstream_called, Number(["demo-pass","demo-guard-out"].includes(aiGateway.model)));
+    assert.match(aiGateway.trace_id, /^[a-f\d-]{36}$/);
+    assert.match(aiGateway.request_id, /^[a-f\d-]{36}$/);
     const policy = events.filter(e => e.source === "policy" &&
-      e.trace_id === gateway.trace_id && e.request_id === gateway.request_id);
+      e.trace_id === aiGateway.trace_id && e.request_id === aiGateway.request_id);
     assert.equal(policy.length, stages.length);
     const actual = stages.map(([service, operation]) =>
       policy.find(e => e.service === service && e.operation === operation)?.kind);
-    assert.deepEqual(actual, decisions, gateway.model + " politika kararları");
-    return { model: gateway.model, chat: chats.find(c => c.model === gateway.model).chat,
-      status, decisions: actual.join("/"), trace: gateway.trace_id };
+    assert.deepEqual(actual, decisions, aiGateway.model + " politika kararları");
+    return { model: aiGateway.model, chat: chats.find(c => c.model === aiGateway.model).chat,
+      status, decisions: actual.join("/"), trace: aiGateway.trace_id };
   });
   // Count physical HTTP calls separately from stored decisions, including any Workshop retries.
   const attempts = id => report.filter(row => row.model === id).length;
   const allowed = attempts("demo-pass"), outputBlock = attempts("demo-guard-out");
   assert.deepEqual(model.models, { "demo-pass": allowed, "demo-guard-out": outputBlock });
   assert.equal(model.total, allowed + outputBlock);
-  assert.equal(model.total, gateways.reduce((total, row) => total + row.upstream_called, 0));
+  assert.equal(model.total, aiGatewayEvents.reduce((total, row) => total + row.upstream_called, 0));
   assert.equal(guard.input, allowed + attempts("demo-guard-in") + outputBlock);
   assert.equal(guard.output, allowed + outputBlock);
   assert.equal(guard.total, guard.input + guard.output);
@@ -73,14 +73,14 @@ function verify(chats, { events, model, guard }) {
 }
 
 const images = {};
-for (const role of ["web", "workshop", "gateway", "model", "guard", "checks"]) {
-  const tag = ["web", "workshop"].includes(role) ? "dockerflare/" + role + ":local" : "seyir/demo-" + role + ":local";
+for (const role of ["web", "workshop", "ai-gateway", "model", "guard", "checks"]) {
+  const tag = ["web", "workshop"].includes(role) ? "dockerflare/" + role + ":local" : "os-dashboard/demo-" + role + ":local";
   images[role] = docker(["image", "inspect", "--format", "{{.Id}}", tag]);
 }
 function volumeImporter(check, events) {
   const mount = "type=volume,source=" + importVolume + ",target=/data,volume-nocopy";
   return docker(["run", "--rm", "-i", "--pull=never", "--network", "none", "--mount", mount,
-    images.gateway, "node", "/app/examples/cloudflare-os/ai-gateway/import-events.mjs", ...(check ? ["--check"] : [])],
+    images["ai-gateway"], "node", "/app/examples/cloudflare-os/ai-gateway/import-events.mjs", ...(check ? ["--check"] : [])],
     events && JSON.stringify(events));
 }
 if (options.length) {
@@ -106,18 +106,18 @@ function removeOwned(listArgs, removeArgs) {
 try {
   for (const network of ["front", "fixtures"])
     docker(["network", "create", "--internal", "--label", label, name(network)]);
-  for (const volume of ["worker-data", "gateway-data", "auth"])
+  for (const volume of ["worker-data", "ai-gateway-data", "auth"])
     docker(["volume", "create", "--label", label, name(volume)]);
   start("model", "fixtures");
   start("guard", "fixtures");
-  start("gateway", "front", ["-v", name("gateway-data") + ":/data", "-v", name("auth") + ":/auth"]);
-  docker(["network", "connect", name("fixtures"), name("gateway")]);
+  start("ai-gateway", "front", ["-v", name("ai-gateway-data") + ":/data", "-v", name("auth") + ":/auth"]);
+  docker(["network", "connect", name("fixtures"), name("ai-gateway")]);
   start("workshop", "front", ["-v", name("worker-data") + ":/data", "-e", "PUBLIC_BASE_URL=http://web:8080",
-    "-e", 'ADMINS=["seyirdemo"]', "-e", 'SELF_HOSTED_MODEL_BASE_URLS=["http://gateway:8000/v1"]']);
+    "-e", 'ADMINS=["dashboarddemo"]', "-e", 'SELF_HOSTED_MODEL_BASE_URLS=["http://ai-gateway:8000/v1"]']);
   start("web", "front");
   const chats = JSON.parse(docker(["run", "--rm", "--pull=never", "--label", label, "--name", name("checks"),
     "--network", name("front"), "-v", name("auth") + ":/auth:ro", images.checks]));
-  const evidence = JSON.parse(docker(["exec", name("gateway"), "node", "/demo/capture.mjs"]));
+  const evidence = JSON.parse(docker(["exec", name("ai-gateway"), "node", "/demo/capture.mjs"]));
   const report = verify(chats, evidence);
   if (options.length) {
     const added = importVolume ? Number(volumeImporter(false, evidence.events)) : importEvents(dbFile, evidence.events);

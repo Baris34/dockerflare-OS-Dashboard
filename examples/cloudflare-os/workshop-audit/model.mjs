@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import assert from "node:assert/strict";
 
 let calls = 0;
-const name = "seyir-audit-demo";
+const name = "os-dashboard-audit-demo";
 function tool(id, name, args) {
   return { role: "assistant", tool_calls: [{ index: 0, id, type: "function",
     function: { name, arguments: JSON.stringify(args) } }] };

@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { openStore, clean } from "./lib/store.mjs";
 import { sources } from "./lib/sources.mjs";
 import { workshopReader } from "./lib/workshop.mjs";
-import { makeGateway, readJson, json, validateRoot } from "./lib/gateway.mjs";
+import { makeAiGateway, readJson, json, validateRoot } from "./lib/ai-gateway.mjs";
 import { readSettings, mergeSettings } from "./lib/settings.mjs";
 import {
   createInferenceListener,
@@ -24,27 +24,27 @@ const staticFiles = new Map([
   ["/mark.svg", ["mark.svg", "image/svg+xml"]],
 ]);
 export async function start(options = {}) {
-  const panelOnly = options.panelOnly ?? process.env.SEYIR_PANEL_ONLY === "1";
+  const panelOnly = options.panelOnly ?? process.env.OS_DASHBOARD_PANEL_ONLY === "1";
   const workshopUrl = validateRoot(options.workshopUrl ?? process.env.DOCKERFLARE_WORKSHOP_URL) || null;
-  const publicGatewayUrl =
+  const publicAiGatewayUrl =
     validateRoot(
-      options.publicGatewayUrl ??
-        process.env.SEYIR_PUBLIC_GATEWAY_URL ??
+      options.publicAiGatewayUrl ??
+        process.env.OS_DASHBOARD_PUBLIC_AI_GATEWAY_URL ??
         (panelOnly ? "http://localhost:4322/v1" : ""),
     ) || null;
-  const customDir = options.dir || process.env.SEYIR_DATA_DIR;
+  const customDir = options.dir || process.env.OS_DASHBOARD_DATA_DIR;
   const dir = resolve(customDir || join(root, "data", "current"));
   const logs = resolve(
-    process.env.SEYIR_LOG_DIR || join(customDir || join(root, "data"), "logs"),
+    process.env.OS_DASHBOARD_LOG_DIR || join(customDir || join(root, "data"), "logs"),
   );
   await mkdir(dir, { recursive: true });
   await mkdir(logs, { recursive: true });
-  const store = openStore(join(dir, "seyir.sqlite"));
-  const workshop = workshopReader(store, options.workshopFile ?? process.env.SEYIR_WORKSHOP_DB,
-    options.demoDir ?? process.env.SEYIR_WORKSHOP_DEMO_DIR);
+  const store = openStore(join(dir, "os-dashboard.sqlite"));
+  const workshop = workshopReader(store, options.workshopFile ?? process.env.OS_DASHBOARD_WORKSHOP_DB,
+    options.demoDir ?? process.env.OS_DASHBOARD_WORKSHOP_DEMO_DIR);
   const src = sources(store, dir, { logs });
   const getSettings = () => readSettings(store);
-  const proxy = panelOnly ? null : makeGateway(store, getSettings);
+  const proxy = panelOnly ? null : makeAiGateway(store, getSettings);
   const server = http.createServer(async (req, res) => {
     try {
       const u = new URL(req.url, "http://localhost");
@@ -104,10 +104,10 @@ export async function start(options = {}) {
         store.batch(() => {
           store.put("settings", updated);
           store.record({
-            source: "seyir",
+            source: "os-dashboard",
             service: "OS Dashboard",
             kind: "config",
-            message: "Model gateway ayarları güncellendi.",
+            message: "AI Gateway ayarları güncellendi.",
           });
         });
         return json(res, 200, getSettings());
@@ -145,8 +145,8 @@ export async function start(options = {}) {
           host: src.host(),
           sources: {
             ...src.status,
-            gateway: {
-              name: "Model gateway",
+            "ai-gateway": {
+              name: "AI Gateway",
               state: cfg.upstream ? "ready" : "off",
               note: cfg.upstream
                 ? "Yapılandırıldı · " + new URL(cfg.upstream).host
@@ -154,22 +154,22 @@ export async function start(options = {}) {
             },
           },
           settings: cfg,
-          publicGatewayUrl,
+          publicAiGatewayUrl,
           workshopUrl,
           guardKeyReady: panelOnly
             ? null
             : Boolean(
-                process.env.SEYIR_GUARD_KEY &&
+                process.env.OS_DASHBOARD_GUARD_KEY &&
                   cfg.guardRoot &&
                   new URL(cfg.guardRoot).origin ===
-                    process.env.SEYIR_GUARD_KEY_ORIGIN,
+                    process.env.OS_DASHBOARD_GUARD_KEY_ORIGIN,
               ),
           keyReady: panelOnly
             ? null
-            : !!process.env.SEYIR_UPSTREAM_KEY &&
+            : !!process.env.OS_DASHBOARD_UPSTREAM_KEY &&
               !!cfg.upstream &&
               new URL(cfg.upstream).origin ===
-                (process.env.SEYIR_KEY_ORIGIN || "https://api.openai.com"),
+                (process.env.OS_DASHBOARD_KEY_ORIGIN || "https://api.openai.com"),
         });
       }
       json(res, 404, { error: "Bulunamadı." });
@@ -182,13 +182,13 @@ export async function start(options = {}) {
     }
   });
   const port = options.port ?? Number(process.env.PORT || 4320),
-    host = options.host || process.env.SEYIR_BIND || "127.0.0.1";
+    host = options.host || process.env.OS_DASHBOARD_BIND || "127.0.0.1";
   const ingress =
     !panelOnly &&
     (options.inference ||
-      (process.env.SEYIR_INFERENCE_BIND && {
-        host: process.env.SEYIR_INFERENCE_BIND,
-        port: Number(process.env.SEYIR_INFERENCE_PORT || 4322),
+      (process.env.OS_DASHBOARD_INFERENCE_BIND && {
+        host: process.env.OS_DASHBOARD_INFERENCE_BIND,
+        port: Number(process.env.OS_DASHBOARD_INFERENCE_PORT || 4322),
       }));
   let inference;
   try {
@@ -206,7 +206,7 @@ export async function start(options = {}) {
   }
   store.prune();
   store.record({
-    source: "seyir",
+    source: "os-dashboard",
     service: "OS Dashboard",
     level: "info",
     kind: "startup",

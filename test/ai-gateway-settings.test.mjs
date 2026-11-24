@@ -19,7 +19,7 @@ test("checking a policy does not count as a second model request", (t) => {
     ["policy", "input", "allow"],
     ["policy", "input", "block"],
     ["policy", "output", "skip"],
-    ["gateway", "chat", "guard_block"],
+    ["ai-gateway", "chat", "guard_block"],
   ])
     store.record({ source, operation, kind, trace_id: "t", message: "test" });
   const { stats } = store.summary(Date.now() - 10_000);
@@ -39,7 +39,7 @@ test("checking a policy does not count as a second model request", (t) => {
 });
 
 test("policy settings survive partial updates, invalid settings and restarts", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-settings-"));
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-settings-"));
   let app = await start({ dir, port: 0, collect: false });
   t.after(async () => {
     await app.close();
@@ -84,7 +84,7 @@ test("policy settings survive partial updates, invalid settings and restarts", a
 });
 
 test("Docker clients can reach only authenticated inference routes on the private listener", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-ingress-"));
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-ingress-"));
   const token = "local-only-test-credential";
   const app = await start({
     dir,
@@ -117,10 +117,10 @@ test("Docker clients can reach only authenticated inference routes on the privat
 });
 
 test(
-  "panel-only service advertises the standalone gateway and shares live policy and audit records with its process",
+  "panel-only service advertises the standalone AI Gateway and shares live policy and audit records with its process",
   { timeout: 15000 },
   async (t) => {
-    const dir = await mkdtemp(join(tmpdir(), "seyir-split-"));
+    const dir = await mkdtemp(join(tmpdir(), "os-dashboard-split-"));
     const tokenFile = join(dir, "client-token");
     const token = "separate-process-test";
     await writeFile(tokenFile, token + "\n", { mode: 0o600 });
@@ -130,7 +130,7 @@ test(
       port: 0,
       collect: false,
       panelOnly: true,
-      publicGatewayUrl: advertised,
+      publicAiGatewayUrl: advertised,
     });
     let child;
     t.after(async () => {
@@ -144,29 +144,29 @@ test(
     });
     assert.equal((await fetch(panel.url + "/v1/models")).status, 404);
     const overview = await (await fetch(panel.url + "/api/overview")).json();
-    assert.equal(overview.publicGatewayUrl, advertised);
+    assert.equal(overview.publicAiGatewayUrl, advertised);
     assert.equal(overview.keyReady, null);
     assert.equal(overview.guardKeyReady, null);
     const entry = fileURLToPath(
-      new URL("../gateway-server.mjs", import.meta.url),
+      new URL("../ai-gateway-server.mjs", import.meta.url),
     );
     child = spawn(process.execPath, [entry], {
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
       env: {
         ...process.env,
-        SEYIR_DATA_DIR: dir,
-        SEYIR_CLIENT_TOKEN: "",
-        SEYIR_CLIENT_TOKEN_FILE: tokenFile,
-        SEYIR_INFERENCE_BIND: "127.0.0.1",
-        SEYIR_INFERENCE_PORT: "0",
+        OS_DASHBOARD_DATA_DIR: dir,
+        OS_DASHBOARD_CLIENT_TOKEN: "",
+        OS_DASHBOARD_CLIENT_TOKEN_FILE: tokenFile,
+        OS_DASHBOARD_INFERENCE_BIND: "127.0.0.1",
+        OS_DASHBOARD_INFERENCE_PORT: "0",
       },
     });
     const lines = createInterface({ input: child.stdout });
     const [line] = await Promise.race([
       once(lines, "line"),
       once(child, "exit").then(([code]) => {
-        throw new Error("Gateway startup exit " + code);
+        throw new Error("AI Gateway startup exit " + code);
       }),
     ]);
     const url = line.match(/http:\/\/127\.0\.0\.1:\d+/)?.[0];
@@ -180,7 +180,7 @@ test(
     const ask = () =>
       fetch(url + "/v1/chat/completions", {
         method: "POST",
-        headers: { ...headers, "x-seyir-trace": "split-policy" },
+        headers: { ...headers, "x-os-dashboard-trace": "split-policy" },
         body: JSON.stringify({
           model: "local",
           messages: [{ role: "user", content: "4111 1111 1111 1111" }],
@@ -210,13 +210,13 @@ test(
   },
 );
 
-test("standalone gateway startup fails closed with an empty token file even with an environment token", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-empty-token-"));
+test("standalone AI Gateway startup fails closed with an empty token file even with an environment token", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-empty-token-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const file = join(dir, "token");
   await writeFile(file, "\n", { mode: 0o600 });
   const entry = fileURLToPath(
-    new URL("../gateway-server.mjs", import.meta.url),
+    new URL("../ai-gateway-server.mjs", import.meta.url),
   );
   await assert.rejects(
     promisify(execFile)(process.execPath, [entry], {
@@ -224,11 +224,11 @@ test("standalone gateway startup fails closed with an empty token file even with
       windowsHide: true,
       env: {
         ...process.env,
-        SEYIR_DATA_DIR: dir,
-        SEYIR_CLIENT_TOKEN_FILE: file,
-        SEYIR_CLIENT_TOKEN: "synthetic-only",
-        SEYIR_INFERENCE_BIND: "127.0.0.1",
-        SEYIR_INFERENCE_PORT: "0",
+        OS_DASHBOARD_DATA_DIR: dir,
+        OS_DASHBOARD_CLIENT_TOKEN_FILE: file,
+        OS_DASHBOARD_CLIENT_TOKEN: "synthetic-only",
+        OS_DASHBOARD_INFERENCE_BIND: "127.0.0.1",
+        OS_DASHBOARD_INFERENCE_PORT: "0",
       },
     }),
     (error) =>
@@ -237,13 +237,14 @@ test("standalone gateway startup fails closed with an empty token file even with
 });
 
 test("simultaneous processes upgrade a legacy SQLite file while preserving its records", async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), "seyir-legacy-"));
+  const dir = await mkdtemp(join(tmpdir(), "os-dashboard-legacy-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
-  const file = join(dir, "legacy.sqlite");
-  const old = openStore(file);
+  const file = join(dir, "os-dashboard.sqlite");
+  const legacyFile = join(dir, "seyir.sqlite");
+  const old = openStore(legacyFile);
   old.record({ source: "gateway", message: "retained" });
   old.close();
-  const db = new DatabaseSync(file);
+  const db = new DatabaseSync(legacyFile);
   db.exec(
     "ALTER TABLE events DROP COLUMN upstream_called; PRAGMA journal_mode=DELETE",
   );
@@ -252,7 +253,7 @@ test("simultaneous processes upgrade a legacy SQLite file while preserving its r
   const worker =
     "import {openStore} from " +
     JSON.stringify(storeModule) +
-    ";const db = openStore(process.argv[1]); db.record({source:'gateway',message:'new',upstream_called:1}); db.close();";
+    ";const db = openStore(process.argv[1]); db.record({source:'ai-gateway',message:'new',upstream_called:1}); db.close();";
   await Promise.all(
     Array.from({ length: 4 }, () =>
       promisify(execFile)(
@@ -265,7 +266,7 @@ test("simultaneous processes upgrade a legacy SQLite file while preserving its r
   const current = openStore(file);
   try {
     const { items } = current.events(
-      new URLSearchParams({ source: "gateway" }),
+      new URLSearchParams({ source: "ai-gateway" }),
     );
     assert.equal(items.length, 5);
     assert.equal(
